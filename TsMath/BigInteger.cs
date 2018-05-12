@@ -1079,9 +1079,15 @@ namespace TsMath
 			return value.ToDouble();
 		}
 
-		public string ToString(int maxlen, int basis = 10)
+		/// <summary>
+		/// Returns a <see cref="string" /> that represents this instance.
+		/// </summary>
+		/// <param name="maxDecimalDigits">The maximum number of decimal digits to use, more digits will be cut off.</param>
+		/// <param name="base">The base of the number conversion.</param>
+		/// <returns>A <see cref="string" /> that represents this instance.</returns>
+		public string ToString(int maxDecimalDigits, int @base = 10)
 		{
-			BigInteger biBasis = basis;
+			BigInteger biBasis = @base;
 			List<char> lc = new List<char>();
 			BigInteger a = this, r = Zero;
 			if (a.IsNegative)
@@ -1090,7 +1096,7 @@ namespace TsMath
 			{
 				a = DivRem(a, biBasis, out r);
 				lc.Add(BaseOps.Index2Char((int)r.lenUsedOrDigit0));
-			} while (a != 0 && lc.Count < maxlen);
+			} while (a != 0 && lc.Count < maxDecimalDigits);
 			if (IsNegative)
 				lc.Add('-');
 			if (a != 0)
@@ -1114,10 +1120,7 @@ namespace TsMath
 		/// <returns>
 		/// A <see cref="string" /> that represents this instance.
 		/// </returns>
-		public override string ToString()
-		{
-			return ToString(TsMathGlobals.MaxBigIntegerToStringDigitCount, 10);
-		}
+		public override string ToString() => ToString(TsMathGlobals.MaxBigIntegerToStringDigitCount, 10);
 
 		/// <summary>
 		/// Compares this instance to an other one.
@@ -1187,13 +1190,7 @@ namespace TsMath
 		/// <value>
 		/// <b>true</b> if this instance is one; otherwise, <b>false</b>.
 		/// </value>
-		public bool IsOne
-		{
-			get
-			{
-				return digits == null && lenUsedOrDigit0 == 1 && !IsNegative;
-			}
-		}
+		public bool IsOne => digits == null && lenUsedOrDigit0 == 1 && !IsNegative;
 
 		/// <summary>
 		/// Implements the operator ==.
@@ -1203,10 +1200,7 @@ namespace TsMath
 		/// <returns>
 		/// <b>true</b> if both numbers are equal; <b>false</b> otherwise.
 		/// </returns>
-		public static bool operator ==(BigInteger a, BigInteger b)
-		{
-			return DoEquals(a, b);
-		}
+		public static bool operator ==(BigInteger a, BigInteger b) => DoEquals(a, b);
 
 		/// <summary>
 		/// Implements the operator !=.
@@ -1216,10 +1210,7 @@ namespace TsMath
 		/// <returns>
 		/// <b>true</b> if both numbers are not equal; <b>false</b> otherwise.
 		/// </returns>
-		public static bool operator !=(BigInteger a, BigInteger b)
-		{
-			return !DoEquals(a, b);
-		}
+		public static bool operator !=(BigInteger a, BigInteger b) => !DoEquals(a, b);
 
 		/// <summary>
 		/// Implements the operator &lt;=.
@@ -1229,10 +1220,7 @@ namespace TsMath
 		/// <returns>
 		/// <b>true</b> if both <paramref name="a"/> is less than or equal to <paramref name="b"/>; <b>false</b> otherwise.
 		/// </returns>
-		public static bool operator <=(BigInteger a, BigInteger b)
-		{
-			return a.CompareTo(b) <= 0;
-		}
+		public static bool operator <=(BigInteger a, BigInteger b) => a.CompareTo(b) <= 0;
 
 		/// <summary>
 		/// Implements the operator &gt;=.
@@ -1242,10 +1230,7 @@ namespace TsMath
 		/// <returns>
 		/// <b>true</b> if both <paramref name="a"/> is greater than or equal to <paramref name="b"/>; <b>false</b> otherwise.
 		/// </returns>
-		public static bool operator >=(BigInteger a, BigInteger b)
-		{
-			return a.CompareTo(b) >= 0;
-		}
+		public static bool operator >=(BigInteger a, BigInteger b) => a.CompareTo(b) >= 0;
 
 		/// <summary>
 		/// Implements the operator &lt;.
@@ -1255,10 +1240,7 @@ namespace TsMath
 		/// <returns>
 		/// <b>true</b> if both <paramref name="a"/> is less than <paramref name="b"/>; <b>false</b> otherwise.
 		/// </returns>
-		public static bool operator <(BigInteger a, BigInteger b)
-		{
-			return a.CompareTo(b) < 0;
-		}
+		public static bool operator <(BigInteger a, BigInteger b) => a.CompareTo(b) < 0;
 
 		/// <summary>
 		/// Implements the operator &gt;.
@@ -1268,10 +1250,7 @@ namespace TsMath
 		/// <returns>
 		/// <b>true</b> if both <paramref name="a"/> is greater than <paramref name="b"/>; <b>false</b> otherwise.
 		/// </returns>
-		public static bool operator >(BigInteger a, BigInteger b)
-		{
-			return a.CompareTo(b) > 0;
-		}
+		public static bool operator >(BigInteger a, BigInteger b) => a.CompareTo(b) > 0;
 
 		internal int Num10Digits
 		{
@@ -1347,7 +1326,12 @@ namespace TsMath
 		/// </value>
 		public bool IsOdd => (this[0] & 1) != 0;
 
-
+		/// <summary>
+		/// Calculates the bitwise and of two <see cref="BigInteger"/> numbers.
+		/// </summary>
+		/// <param name="a">First number.</param>
+		/// <param name="b">Second number.</param>
+		/// <returns>The result.</returns>
 		public static BigInteger operator &(BigInteger a, BigInteger b)
 		{
 			int nd = Math.Max(a.DigitCount, b.DigitCount);
@@ -1357,6 +1341,12 @@ namespace TsMath
 			return new BigInteger(dig, a.IsNegative && b.IsNegative);
 		}
 
+		/// <summary>
+		/// Calculates the bitwise or of two <see cref="BigInteger"/> numbers.
+		/// </summary>
+		/// <param name="a">First number.</param>
+		/// <param name="b">Second number.</param>
+		/// <returns>The result.</returns>
 		public static BigInteger operator |(BigInteger a, BigInteger b)
 		{
 			int nd = Math.Max(a.DigitCount, b.DigitCount);
@@ -1366,7 +1356,12 @@ namespace TsMath
 			return new BigInteger(dig, a.IsNegative || b.IsNegative);
 		}
 
-
+		/// <summary>
+		/// Calculates the bitwise xor of two <see cref="BigInteger"/> numbers.
+		/// </summary>
+		/// <param name="a">First number.</param>
+		/// <param name="b">Second number.</param>
+		/// <returns>The result.</returns>
 		public static BigInteger operator ^(BigInteger a, BigInteger b)
 		{
 			int nd = Math.Max(a.DigitCount, b.DigitCount);
@@ -1445,8 +1440,6 @@ namespace TsMath
 			return new BigInteger(res, a.IsNegative);
 		}
 
-
-
 		/// <summary>
 		/// Calculates the greatest common denominator for two <see cref="BigInteger"/>s.
 		/// </summary>
@@ -1515,10 +1508,7 @@ namespace TsMath
 		/// </summary>
 		/// <param name="value"></param>
 		/// <returns></returns>
-		public static double Log10(BigInteger value)
-		{
-			return BigInteger.Log(value, 10);
-		}
+		public static double Log10(BigInteger value) => Log(value, 10);
 
 		/// <summary>
 		/// Indicates whether the current object is equal to another object of the same type.
@@ -1527,10 +1517,8 @@ namespace TsMath
 		/// <returns>
 		/// true if the current object is equal to the <paramref name="other">other</paramref> parameter; otherwise, false.
 		/// </returns>
-		public bool Equals(BigInteger other)
-		{
-			return DoEquals(this, other);
-		}
+		public bool Equals(BigInteger other) => DoEquals(this, other);
+
 	}
 
 

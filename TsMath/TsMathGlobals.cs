@@ -19,7 +19,6 @@
 		/// </summary>
 		public static int MaxBigIntegerToStringDigitCount = 80;
 
-
 		/// <summary>
 		/// The maximum number of parallel operations. Set this value to zero, if you want a single threaded execution.
 		/// </summary>
@@ -31,7 +30,7 @@
 		public static int BigIntegerKaratsubaThreshold = 20;
 
 		/// <summary>
-		/// The difference of digits between dividend and divisor, where the algorithm switches from naive division to a
+		/// The difference of digits (<see cref="uint"/> values) between dividend and divisor, where the algorithm switches from naive division to a
 		/// divide and conquer recursive version.
 		/// </summary>
 		public static int BigIntegerRecursiveDivRemThreshold = 10;
