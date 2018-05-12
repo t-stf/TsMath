@@ -27,6 +27,19 @@ namespace TsMath
 		static double log2Bylog10 = Math.Log(2) / Math.Log(10);
 
 		/// <summary>
+		/// Gets the absolute value of this <see cref="BigInteger"/>.
+		/// </summary>
+		/// <returns></returns>
+		public static BigInteger Abs(this BigInteger value)
+		{
+			if (!value.IsNegative)
+				return value;
+			value.IsNegative = false;
+			return value;
+		}
+
+
+		/// <summary>
 		/// Returns the number of decimal digits of the provided number.
 		/// </summary>
 		/// <param name="num">The number.</param>
@@ -35,7 +48,7 @@ namespace TsMath
 		{
 			if (num.IsZero)
 				return 1;
-			num = num.Abs;
+			num = num.Abs();
 			int digitCount = (int)(log2Bylog10 * num.MostSignificantBitPosition + 1);
 			if (GetPowerOfTen(digitCount - 1) > num)
 			{
@@ -174,6 +187,6 @@ namespace TsMath
 				x = next;
 			}
 		}
-	
+
 	}
 }

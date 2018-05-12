@@ -21,11 +21,14 @@
 
 
 		/// <summary>
-		/// The maximum parallel number of operations that could execute in parallel. Set this value to zero,
-		/// if you want a single threaded execution.
+		/// The maximum number of parallel operations. Set this value to zero, if you want a single threaded execution.
 		/// </summary>
 		public static int MaxParallel = 2 * System.Environment.ProcessorCount;
 
+		/// <summary>
+		/// Number of digits (<see cref="uint"/> values) of a number to switch to Karatsuba multiplication. 
+		/// </summary>
+		public static int BigIntegerKaratsubaThreshold = 20;
 
 		/// <summary>
 		/// The difference of digits between dividend and divisor, where the algorithm switches from naive division to a

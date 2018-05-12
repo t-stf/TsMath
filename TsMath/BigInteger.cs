@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using TsMath.Helpers;
-
-#pragma warning disable 1591
+using static TsMath.TsMathGlobals;
 
 namespace TsMath
 {
@@ -345,11 +344,6 @@ namespace TsMath
 		}
 
 		/// <summary>
-		/// Number of digits to switch to Karatsuba multiplication. Use with care!
-		/// </summary>
-		public static int KaratsubaThreshold = 35;
-
-		/// <summary>
 		/// Used length of digits. or the digit for single digit numbers
 		/// </summary>
 		uint lenUsedOrDigit0;
@@ -357,7 +351,7 @@ namespace TsMath
 		/// <summary>
 		/// Digits in lo to hi order; null if number has only one digit
 		/// </summary>
-		uint[] digits;
+		private uint[] digits;
 
 		bool IsSmall => digits == null;
 
@@ -367,7 +361,7 @@ namespace TsMath
 		/// <value>
 		/// <b>true</b> if this instance is negative; otherwise, <b>false</b>.
 		/// </value>
-		public bool IsNegative { get; private set; }
+		public bool IsNegative { get; internal set; }
 
 		/// <summary>
 		/// The <see cref="BigInteger"/> representing zero (0).
@@ -486,34 +480,37 @@ namespace TsMath
 		/// Parses the specified string.
 		/// </summary>
 		/// <param name="s">The string.</param>
-		/// <param name="basis">The base.</param>
+		/// <param name="base">The base.</param>
 		/// <returns>The parsed number.</returns>
 		/// <exception cref="System.FormatException">The number format for the BigInteger is invalid.</exception>
-		public static BigInteger Parse(string s, int basis = 10)
+		public static BigInteger Parse(string s, int @base = 10)
 		{
-			BigInteger a;
-			if (!TryParse(s, basis, out a))
+			if (!TryParse(s, @base, out BigInteger a))
 				throw new FormatException("Invalid BigInteger format");
 			return a;
 		}
 
 		/// <summary>
-		/// Tries to parse the string <paramref name="s"/> to a <see cref="BigInteger"/>.
+		/// Tries to convert a string to a <see cref="BigInteger"/>.
 		/// </summary>
-		/// <param name="s">The number string to parse.</param>
+		/// <param name="s">The number string to convert.</param>
 		/// <param name="a">The resulting number.</param>
 		/// <returns><b>true</b>if the string contained a valid number; <b>false</b> otherwise.</returns>
-		public static bool TryParse(string s, out BigInteger a)
-		{
-			return TryParse(s, 10, out a);
-		}
+		public static bool TryParse(string s, out BigInteger a) => TryParse(s, 10, out a);
 
-		public static bool TryParse(string s, int @base, out BigInteger a, bool ignoreSign = false)
+		/// <summary>
+		/// Tries to convert a string to a <see cref="BigInteger"/> using a number base.
+		/// </summary>
+		/// <param name="s">The number string to convert.</param>
+		/// <param name="base">The number base</param>
+		/// <param name="result">The result, or <see cref="BigInteger.Zero"/> if the conversion fails.</param>
+		/// <returns><b>true</b>if the string contained a valid number; <b>false</b> otherwise.</returns>
+		public static bool TryParse(string s, int @base, out BigInteger result)
 		{
-			a = new BigInteger();
-			if (!a.TryParseIn(s, @base, ignoreSign))
+			result = new BigInteger();
+			if (!result.TryParseIn(s, @base, false))
 			{
-				a = null;
+				result = Zero;
 				return false;
 			}
 			return true;
@@ -559,7 +556,7 @@ namespace TsMath
 		}
 
 		/// <summary>
-		/// Gets the digit count (e.g. number of positions of the uint struct).
+		/// Gets the digit count (e.g. number of positions of the underlaying <see cref="uint"/> struct).
 		/// </summary>
 		/// <value>
 		/// The digit count.
@@ -734,23 +731,34 @@ namespace TsMath
 			return a;
 		}
 
+		/// <summary>
+		/// Multiplies two <see cref="BigInteger"/> numbers.
+		/// </summary>
+		/// <remarks>
+		/// Use <see cref="BigIntegerKaratsubaThreshold"/> to control, when instead of the naive algorithm,
+		/// the Karatsuba multiplication will be used (if both numbers have more digits).
+		/// </remarks>
+		/// <param name="a">First number to multiply.</param>
+		/// <param name="b">Second number to multiply.</param>
+		/// <returns>The product.</returns>
 		public static BigInteger operator *(BigInteger a, BigInteger b)
 		{
 			bool fNeg = a.IsNegative != b.IsNegative;
+			// check for fast
 			if (a.digits == null && b.digits == null)
 			{
 				ulong dd = a.lenUsedOrDigit0;
 				dd *= b.lenUsedOrDigit0;
-				uint übertrag = (uint)(dd >> BaseOps.BitsPerDigit);
-				if (übertrag == 0)
+				uint carryOver = (uint)(dd >> BaseOps.BitsPerDigit);
+				if (carryOver == 0)
 					return new BigInteger((uint)dd, fNeg);
-				//Überlauf
 				uint[] sRes = new uint[2];
-				sRes[0] = (uint)dd; sRes[1] = übertrag;
+				sRes[0] = (uint)dd; sRes[1] = carryOver;
 				return new BigInteger(sRes, fNeg);
 			}
-			if (a.DigitCount < KaratsubaThreshold || b.DigitCount < KaratsubaThreshold)
+			if (a.DigitCount < BigIntegerKaratsubaThreshold || b.DigitCount < BigIntegerKaratsubaThreshold)
 			{
+				// naive multiplication -> faster for small numbers
 				int nResDigit = a.DigitCount + b.DigitCount + 1;
 				uint[] res = new uint[nResDigit];
 				for (int i = 0; i < b.DigitCount; i++)
@@ -871,7 +879,7 @@ namespace TsMath
 			int len = DigitCount;
 			if (n >= len)
 			{
-				return Abs;
+				return this.Abs();
 			}
 			uint[] lowerInts = new uint[n];
 			Array.Copy(this.digits, lowerInts, n);
@@ -928,8 +936,8 @@ namespace TsMath
 				r = Zero;
 				return One;
 			}
-			a = a.Abs;
-			b = b.Abs;
+			a = a.Abs();
+			b = b.Abs();
 			BigInteger quotient;
 			if ((a.DigitCount - b.DigitCount) >= TsMathGlobals.BigIntegerRecursiveDivRemThreshold)
 				quotient = DivRemRecursive(a, b, out r);
@@ -956,32 +964,39 @@ namespace TsMath
 			bool fQNeg = a.IsNegative != b.IsNegative;
 			bool fRNeg = a.IsNegative;
 
-			var quotient = DivRemWorker(a.Abs, b.Abs, out r);
+			var quotient = DivRemWorker(a.Abs(), b.Abs(), out r);
 			if (!r.IsZero)
 				r.IsNegative = fRNeg;
 			quotient.IsNegative = fQNeg && !quotient.IsZero;
 			return quotient;
 		}
 
-		public static BigInteger operator /(BigInteger a, BigInteger b)
-		{
-			BigInteger r;
-			return DivRem(a, b, out r);
-		}
+		/// <summary>
+		/// Divides two <see cref="BigInteger"/> values.
+		/// </summary>
+		/// <param name="dividend">The value to be divided.</param>
+		/// <param name="divisor">The value to divide by.</param>
+		/// <returns>The result of the division.</returns>
+		public static BigInteger operator /(BigInteger dividend, BigInteger divisor) => DivRem(dividend, divisor, out BigInteger r);
 
-		public static BigInteger operator %(BigInteger a, BigInteger b)
+		/// <summary>
+		/// Calculates the remainder of the division of two <see cref="BigInteger"/> values.
+		/// </summary>
+		/// <param name="dividend">The value to be divided.</param>
+		/// <param name="divisor">The value to divide by.</param>
+		/// <returns>The remainder of the division.</returns>
+		public static BigInteger operator %(BigInteger dividend, BigInteger divisor)
 		{
-			BigInteger r;
-			DivRem(a, b, out r);
+			DivRem(dividend, divisor, out BigInteger r);
 			return r;
 		}
 
-		public static implicit operator BigInteger(string str)
-		{
-			if (ReferenceEquals(str, null))
-				return Zero;
-			return Parse(str);
-		}
+		/// <summary>
+		/// Conversion from <see cref="String"/> to <see cref="BigInteger"/>.
+		/// </summary>
+		/// <param name="str">The string to convert.</param>
+		/// <exception cref="FormatException">The number format for the BigInteger is invalid.</exception>
+		public static implicit operator BigInteger(string str) => string.IsNullOrEmpty(str) ? Zero : Parse(str);
 
 		/// <summary>
 		/// Conversion from <see cref="int"/> to <see cref="BigInteger"/>.
@@ -1009,12 +1024,11 @@ namespace TsMath
 		{
 			var a = this;
 			double d = 0, fak = 1;
-			BigInteger r;
 			bool sign = a.IsNegative;
-			a = a.Abs;
+			a = a.Abs();
 			while (a != 0)
 			{
-				a = DivRem(a, 10, out r);
+				a = DivRem(a, 10, out BigInteger r);
 				d += fak * r.lenUsedOrDigit0;
 				fak *= 10D;
 			}
@@ -1042,7 +1056,7 @@ namespace TsMath
 			if (res > long.MaxValue)
 			{
 				if (!IsNegative)
-				  return long.MaxValue;
+					return long.MaxValue;
 				lmax++;
 				return res >= lmax ? long.MinValue : long.MinValue + 1;
 			}
@@ -1432,19 +1446,6 @@ namespace TsMath
 		}
 
 
-		public BigInteger Abs
-		{
-			get
-			{
-				if (!IsNegative)
-					return this;
-				BigInteger ret = new BigInteger(this)
-				{
-					IsNegative = false
-				};
-				return ret;
-			}
-		}
 
 		/// <summary>
 		/// Calculates the greatest common denominator for two <see cref="BigInteger"/>s.
@@ -1454,7 +1455,7 @@ namespace TsMath
 		/// <returns>The greatest common denominator.</returns>
 		public static BigInteger Gcd(BigInteger a, BigInteger b)
 		{
-			a = a.Abs; b = b.Abs;
+			a = a.Abs(); b = b.Abs();
 			BigInteger d, r;
 			if (a < b)
 			{
@@ -1468,7 +1469,13 @@ namespace TsMath
 			return a;
 		}
 
-		public static double Log(BigInteger value, double baseValue)
+		/// <summary>
+		/// Calculates the logarithm with base <paramref name="baseValue"/> of the given number.
+		/// </summary>
+		/// <param name="value">The number to calculate the logarithm.</param>
+		/// <param name="baseValue">The base of the logarithm (default e).</param>
+		/// <returns>The logarithm of <paramref name="value"/>.</returns>
+		public static double Log(BigInteger value, double baseValue = Math.E)
 		{
 			if (value.IsNegative || baseValue == 1.0)
 				return double.NaN;
@@ -1503,6 +1510,11 @@ namespace TsMath
 			}
 		}
 
+		/// <summary>
+		/// Calculates the logarithm with base 10 of the given number.
+		/// </summary>
+		/// <param name="value"></param>
+		/// <returns></returns>
 		public static double Log10(BigInteger value)
 		{
 			return BigInteger.Log(value, 10);
