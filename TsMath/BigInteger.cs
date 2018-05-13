@@ -394,8 +394,11 @@ namespace TsMath
 		}
 
 		/// <summary>
-		/// -1 if the number is negative; 0 if the number is zero and +1 if the number is positive.
+		/// Gets the sign of this number.
 		/// </summary>
+		/// <value>
+		/// -1 if the number is negative; 0 if the number is zero and +1 if the number is positive.
+		/// </value>
 		public int Sign
 		{
 			get
@@ -946,27 +949,27 @@ namespace TsMath
 			return quotient;
 		}
 
-
 		/// <summary>
 		/// Division with remainder. Solves a = b * q + r;
 		/// </summary>
-		/// <param name="a">Dividend.</param>
-		/// <param name="b">Divisor.</param>
-		/// <param name="r">Remainder; can be negative.</param>
-		/// <returns>Quotient q in the equation above.</returns>
 		/// <remarks>
 		/// You can control the switch from the naive algorithm to a divide an conquer approach with the parameter <see cref="TsMathGlobals.BigIntegerRecursiveDivRemThreshold"/>.
-		/// </remarks>
-		public static BigInteger DivRem(BigInteger a, BigInteger b, out BigInteger r)
+		/// </remarks>		
+		/// <param name="dividend">Dividend.</param>
+		/// <param name="divisor">Divisor.</param>
+		/// <param name="remainder">Remainder; can be negative.</param>
+		/// <returns>Quotient q in the equation above.</returns>
+		/// <exception cref="DivideByZeroException">The <paramref name="divisor"/> is zero.</exception>
+		public static BigInteger DivRem(BigInteger dividend, BigInteger divisor, out BigInteger remainder)
 		{
-			if (b.digits == null && b.lenUsedOrDigit0 == 0)
+			if (divisor.digits == null && divisor.lenUsedOrDigit0 == 0)
 				throw new DivideByZeroException();
-			bool fQNeg = a.IsNegative != b.IsNegative;
-			bool fRNeg = a.IsNegative;
+			bool fQNeg = dividend.IsNegative != divisor.IsNegative;
+			bool fRNeg = dividend.IsNegative;
 
-			var quotient = DivRemWorker(a.Abs(), b.Abs(), out r);
-			if (!r.IsZero)
-				r.IsNegative = fRNeg;
+			var quotient = DivRemWorker(dividend.Abs(), divisor.Abs(), out remainder);
+			if (!remainder.IsZero)
+				remainder.IsNegative = fRNeg;
 			quotient.IsNegative = fQNeg && !quotient.IsZero;
 			return quotient;
 		}
@@ -1266,6 +1269,9 @@ namespace TsMath
 		/// <summary>
 		/// The position of the most significant bit of this number.
 		/// </summary>
+		/// <example>
+		/// <code source="Example.cs" region="ExMostSignificantBitPosition" />
+		/// </example>
 		public int MostSignificantBitPosition
 		{
 			get
