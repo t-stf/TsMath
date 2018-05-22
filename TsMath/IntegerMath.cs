@@ -75,7 +75,7 @@ namespace TsMath
 			if (ls == BigInteger.One)
 				return 1;
 			return 0;
-		}		
+		}
 
 		/// <summary>
 		/// Find a quadratic residue (mod p) of 'a'. p	must be a prime.	 
@@ -138,7 +138,24 @@ namespace TsMath
 
 		}
 
-
+		/// <summary>
+		/// Retrieves the position of the most significant bit of this number.
+		/// </summary>
+		/// <param name="num">The number to check.</param>
+		/// <returns>The position of the most significant bit of this number.</returns>
+		public static int GetMostSignificantBitPosition(this long num)
+		{
+			long start = 1L << 62;
+			int pos = 63;
+			while (start > 0)
+			{
+				if ((start & num) != 0)
+					return pos;
+				pos--;
+				start >>= 1;
+			}
+			return 0;
+		}
 
 	}
 

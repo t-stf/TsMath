@@ -4,7 +4,7 @@ namespace TsMath
 {
 	using System;
 
-	public partial class IntegerMath
+	public static partial class IntegerMath
 	{
 		/// <summary>
 		/// Computes the greatest common divisor.
@@ -126,6 +126,36 @@ namespace TsMath
 			}
 			return prod;
 		}
+
+		/// <summary>
+		/// Computes an a so, that a^2 &lt;=<paramref name="n"/> &lt; (a+1)^2. Very slow 
+		/// </summary>
+		/// <param name="n">Value</param>
+		/// <returns>Square root estimate.</returns>
+		public static int ISqrt(this int n)
+		{
+			if (n < 0)
+				throw new ArgumentException("negative square root");
+			if (n <= 1)
+				return n;
+			var x = n >> 1;
+			if (n <= 5)
+				return x;
+			int nIter = 0;
+			while (true)
+			{
+				nIter++;
+				var next = (n / x + x) >> 1;
+				var diff = next - x;
+				if (diff == 0)
+					return next;
+				// if n + 1 is a perfect square (e.g. n=15) there is no convergence but a cycle.
+				if (diff == 1)
+					return x;
+				x = next;
+			}
+		}
+
 	}
 }
 
@@ -135,7 +165,7 @@ namespace TsMath
 {
 	using System;
 
-	public partial class IntegerMath
+	public static partial class IntegerMath
 	{
 		/// <summary>
 		/// Computes the greatest common divisor.
@@ -257,6 +287,36 @@ namespace TsMath
 			}
 			return prod;
 		}
+
+		/// <summary>
+		/// Computes an a so, that a^2 &lt;=<paramref name="n"/> &lt; (a+1)^2. Very slow 
+		/// </summary>
+		/// <param name="n">Value</param>
+		/// <returns>Square root estimate.</returns>
+		public static long ISqrt(this long n)
+		{
+			if (n < 0)
+				throw new ArgumentException("negative square root");
+			if (n <= 1)
+				return n;
+			var x = n >> 1;
+			if (n <= 5)
+				return x;
+			int nIter = 0;
+			while (true)
+			{
+				nIter++;
+				var next = (n / x + x) >> 1;
+				var diff = next - x;
+				if (diff == 0)
+					return next;
+				// if n + 1 is a perfect square (e.g. n=15) there is no convergence but a cycle.
+				if (diff == 1)
+					return x;
+				x = next;
+			}
+		}
+
 	}
 }
 
@@ -266,7 +326,7 @@ namespace TsMath
 {
 	using System;
 
-	public partial class IntegerMath
+	public static partial class IntegerMath
 	{
 		/// <summary>
 		/// Computes the greatest common divisor.
@@ -388,6 +448,36 @@ namespace TsMath
 			}
 			return prod;
 		}
+
+		/// <summary>
+		/// Computes an a so, that a^2 &lt;=<paramref name="n"/> &lt; (a+1)^2. Very slow 
+		/// </summary>
+		/// <param name="n">Value</param>
+		/// <returns>Square root estimate.</returns>
+		public static BigInteger ISqrt(this BigInteger n)
+		{
+			if (n < 0)
+				throw new ArgumentException("negative square root");
+			if (n <= 1)
+				return n;
+			var x = n >> 1;
+			if (n <= 5)
+				return x;
+			int nIter = 0;
+			while (true)
+			{
+				nIter++;
+				var next = (n / x + x) >> 1;
+				var diff = next - x;
+				if (diff == 0)
+					return next;
+				// if n + 1 is a perfect square (e.g. n=15) there is no convergence but a cycle.
+				if (diff == 1)
+					return x;
+				x = next;
+			}
+		}
+
 	}
 }
 

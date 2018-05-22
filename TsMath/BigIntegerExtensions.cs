@@ -49,7 +49,7 @@ namespace TsMath
 			if (num.IsZero)
 				return 1;
 			num = num.Abs();
-			int digitCount = (int)(log2Bylog10 * num.MostSignificantBitPosition + 1);
+			int digitCount = (int)(log2Bylog10 * num.GetMostSignificantBitPosition() + 1);
 			if (GetPowerOfTen(digitCount - 1) > num)
 			{
 				return digitCount - 1;
@@ -159,34 +159,7 @@ namespace TsMath
 
 
 
-		/// <summary>
-		/// Computes an a so, that a^2 &lt;=<paramref name="n"/> &lt; (a+1)^2. Very slow 
-		/// </summary>
-		/// <param name="n">Value</param>
-		/// <returns>Square root estimate.</returns>
-		public static BigInteger ISqrt(this BigInteger n)
-		{
-			if (n < 0)
-				throw new ArgumentException("negative square root");
-			if (n <= 1)
-				return n;
-			BigInteger x = n >> 1;
-			if (n <= 5)
-				return x;
-			int nIter = 0;
-			while (true)
-			{
-				nIter++;
-				var next = (n / x + x) >> 1;
-				var diff = next - x;
-				if (diff.IsZero)
-					return next;
-				// if n + 1 is a perfect square (e.g. n=15) there is no convergence but a cycle.
-				if (diff.IsOne)
-					return x;
-				x = next;
-			}
-		}
+
 
 	}
 }

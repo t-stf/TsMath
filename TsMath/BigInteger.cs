@@ -1272,25 +1272,22 @@ namespace TsMath
 		/// <example>
 		/// <code source="Example.cs" region="ExMostSignificantBitPosition" />
 		/// </example>
-		public int MostSignificantBitPosition
+		public int GetMostSignificantBitPosition()
 		{
-			get
+			int n = DigitCount - 1;
+			while (n >= 0 && this[n] == 0)
+				n--;
+			if (n < 0)
+				return 0;
+			int bc = (n + 1) * BaseOps.BitsPerDigit;
+			uint d = this[n];
+			uint bit = ((uint)1 << (BaseOps.BitsPerDigit - 1));
+			while ((d & bit) == 0)
 			{
-				int n = DigitCount - 1;
-				while (n >= 0 && this[n] == 0)
-					n--;
-				if (n < 0)
-					return 0;
-				int bc = (n + 1) * BaseOps.BitsPerDigit;
-				uint d = this[n];
-				uint bit = ((uint)1 << (BaseOps.BitsPerDigit - 1));
-				while ((d & bit) == 0)
-				{
-					bc--;
-					bit >>= 1;
-				}
-				return bc;
+				bc--;
+				bit >>= 1;
 			}
+			return bc;
 		}
 
 		/// <summary>
