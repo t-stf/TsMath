@@ -13,4 +13,8 @@
     <DocumentationFile>bin\Release\netstandard2.0\TsMath.xml</DocumentationFile>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="IntegerMath.gen.cs" />
+  </ItemGroup>
+
 </Project>
