@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using TsMath.Helpers;
 
 namespace TsMath
 {
@@ -95,7 +96,7 @@ namespace TsMath
 			if (a.Sign < 0 || p.Sign <= 0)
 				throw new ArgumentException("Arguments must be positive.");
 			var zero = BigInteger.Zero;
-			if (a.IsZero || LegendreSymbol(a, p) != 1)
+			if (a.IsZero() || LegendreSymbol(a, p) != 1)
 				return zero;
 			var two = BigInteger.Two;
 			if (p == two)
@@ -156,6 +157,96 @@ namespace TsMath
 			}
 			return 0;
 		}
+
+		/// <summary>
+		/// Division with remainder. Solves a = b * q + r;
+		/// </summary>
+		/// <remarks>
+		/// You can control the switch from the naive algorithm to a divide an conquer approach with the parameter <see cref="TsMathGlobals.BigIntegerRecursiveDivRemThreshold"/>.
+		/// </remarks>		
+		/// <param name="dividend">Dividend.</param>
+		/// <param name="divisor">Divisor.</param>
+		/// <returns>A value tuple containing the quotient q and the remainder r.</returns>
+		/// <exception cref="DivideByZeroException">The <paramref name="divisor"/> is zero.</exception>
+		public static (BigInteger quotient, BigInteger remainder) Divide(this BigInteger dividend, BigInteger divisor)
+		{
+			var d = BigInteger.DivRem(dividend, divisor, out BigInteger r);
+			return (d, r);
+		}
+
+		/// <summary>
+		/// Division with remainder. Solves a = b * q + r;
+		/// </summary>
+		/// <param name="dividend">Dividend.</param>
+		/// <param name="divisor">Divisor.</param>
+		/// <returns>A value tuple containing the quotient q and the remainder r.</returns>
+		/// <exception cref="DivideByZeroException">The <paramref name="divisor"/> is zero.</exception>
+		public static (long quotient, long remainder) Divide(this long dividend, long divisor)
+			=> (dividend / divisor, dividend % divisor);
+
+
+		/// <summary>
+		/// Calculates (<paramref name="x"/> * <paramref name="y"/>) mod <paramref name="modVal"/>.
+		/// </summary>
+		/// <param name="x">First factor.</param>
+		/// <param name="y">Second factor.</param>
+		/// <param name="modVal">Modulo value, must be greater than 0.</param>
+		/// <returns>The modulo value between 0 and <paramref name="modVal"/>-1.</returns>
+		public static BigInteger MulMod(BigInteger x, BigInteger y, BigInteger modVal)
+		{
+			if (modVal <= 0)
+				throw new ArithmeticException($"{nameof(modVal)} > 0 expected");
+			x %= modVal;
+			y %= modVal;
+			if (x.IsNegative)
+				x += modVal;
+			if (y.IsNegative)
+				y += modVal;
+			return (x * y) % modVal;
+		}
+
+		/// <summary>
+		/// Calculates (<paramref name="x"/> * <paramref name="y"/>) mod <paramref name="modVal"/>.
+		/// </summary>
+		/// <remarks>
+		/// This function is safe to use, so that the result is correct, even if product overflows or 
+		/// underflows.
+		/// </remarks>
+		/// <param name="x">First factor.</param>
+		/// <param name="y">Second factor.</param>
+		/// <param name="modVal">Modulo value, must be greater than 0.</param>
+		/// <returns>The modulo value between 0 and <paramref name="modVal"/>-1.</returns>
+		public static long MulMod(long x, long y, long modVal)
+		{
+			if (modVal <= 0)
+				throw new ArithmeticException($"{nameof(modVal)} > 0 expected");
+			x = x % modVal;
+			y = y % modVal;
+			if (x < 0)
+				x += modVal;
+			if (y < 0)
+				y += modVal;
+			if (x < int.MaxValue && y < int.MaxValue)
+				return (x * y) % modVal;
+			var result = MulMod((ulong)x, (ulong)y, (ulong)modVal);
+			return (long)result;
+		}
+
+		static ulong MulMod(ulong a, ulong b, ulong modVal)
+		{
+			if (a > b)
+				DivHelpers.Swap(ref a, ref b);
+			ulong res = 0;
+			while (a != 0)
+			{
+				if ((a & 1) != 0)
+					res = (res + b) % modVal;
+				a >>= 1;
+				b = (b << 1) % modVal; // safe, because we use max 63 bits
+			}
+			return res;
+		}
+
 
 	}
 

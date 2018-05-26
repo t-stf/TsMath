@@ -46,7 +46,7 @@ namespace TsMath
 		/// <returns>The number of decimal digits of the provided number.</returns>
 		public static int GetDecimalPrecision(this BigInteger num)
 		{
-			if (num.IsZero)
+			if (num.IsZero())
 				return 1;
 			num = num.Abs();
 			int digitCount = (int)(log2Bylog10 * num.GetMostSignificantBitPosition() + 1);
@@ -74,7 +74,7 @@ namespace TsMath
 			BigInteger pot = BigInteger.Zero;
 			if (exponent < powersOfTen.Length)
 				pot = powersOfTen[exponent];
-			if (pot.IsZero)
+			if (pot.IsZero())
 			{
 				pot = BigInteger.Pow(10, exponent);
 				if (exponent < powersOfTen.Length)
@@ -90,7 +90,7 @@ namespace TsMath
 			BigInteger pot = BigInteger.Zero;
 			if (exponent < halfOfPowersOfTen.Length)
 				pot = halfOfPowersOfTen[exponent];
-			if (pot.IsZero)
+			if (pot.IsZero())
 			{
 				pot = GetPowerOfTen(exponent) >> 1;
 				if (exponent < halfOfPowersOfTen.Length)

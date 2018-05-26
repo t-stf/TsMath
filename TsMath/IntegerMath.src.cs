@@ -87,10 +87,10 @@ namespace TsMath
 			{
 				while ((m & 1) == 0)
 				{
-					x = (x * x) % mod;
+					x = MulMod(x, x, mod);
 					m >>= 1;
 				}
-				temp = (temp * x) % mod;
+				temp = MulMod(temp, x, mod);
 				m--;
 			}
 			return temp;
@@ -203,6 +203,7 @@ namespace TsMath
 		/// <param name="num">The number to calculate the base 10 logarithm for.</param>
 		/// <returns>The integer base 10 logarithm.</returns>
 		public static BigInteger IntLog10(this BigInteger num) => IntLog(num, 10);
+
 
 	}
 }

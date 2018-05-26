@@ -729,7 +729,7 @@ namespace TsMath
 		/// </returns>
 		public static BigInteger operator -(BigInteger a)
 		{
-			if (!a.IsZero)
+			if (!a.IsZero())
 				a.IsNegative = !a.IsNegative;
 			return a;
 		}
@@ -854,7 +854,7 @@ namespace TsMath
 			while (ap.Sign < 0)
 			{
 				q1--;
-				if (bks.IsZero)
+				if (bks.IsZero())
 					bks = b << kShift;
 				ap += bks;
 			}
@@ -968,9 +968,9 @@ namespace TsMath
 			bool fRNeg = dividend.IsNegative;
 
 			var quotient = DivRemWorker(dividend.Abs(), divisor.Abs(), out remainder);
-			if (!remainder.IsZero)
+			if (!remainder.IsZero())
 				remainder.IsNegative = fRNeg;
-			quotient.IsNegative = fQNeg && !quotient.IsZero;
+			quotient.IsNegative = fQNeg && !quotient.IsZero();
 			return quotient;
 		}
 
@@ -1171,7 +1171,7 @@ namespace TsMath
 
 		static bool DoEquals(BigInteger a, BigInteger b)
 		{
-			bool aNull = a.IsZero, bNull = b.IsZero;
+			bool aNull = a.IsZero(), bNull = b.IsZero();
 			if (aNull && bNull)
 				return true;
 			if (aNull || bNull)
@@ -1182,10 +1182,13 @@ namespace TsMath
 		/// <summary>
 		/// Gets a value indicating whether this instance is zero.
 		/// </summary>
-		/// <value>
+		/// <returns>
 		/// <b>true</b> if this instance is zero; otherwise, <b>false</b>.
-		/// </value>
-		public bool IsZero => digits == null && lenUsedOrDigit0 == 0 && !IsNegative;
+		/// </returns>
+		public bool IsZero()
+		{
+			return digits == null && lenUsedOrDigit0 == 0 && !IsNegative;
+		}
 
 		/// <summary>
 		/// Gets a value indicating whether this instance is one.

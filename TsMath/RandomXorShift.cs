@@ -192,7 +192,7 @@ namespace TsMath
 		{
 			if (maxValue.Sign <= 0)
 			{
-				if (maxValue.IsZero)
+				if (maxValue.IsZero())
 					return 0;
 				throw new ArgumentOutOfRangeException();
 			}
