@@ -103,7 +103,7 @@ namespace TsMath
 			var one = BigInteger.One;
 			var q = p - one;
 			int s = 0;
-			while (q.IsEven)
+			while (q.IsEven())
 			{
 				q >>= 1;
 				s++;

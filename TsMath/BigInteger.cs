@@ -1305,7 +1305,7 @@ namespace TsMath
 			BigInteger prod = a;
 			while (b > 0)
 			{
-				if (b.IsOdd)
+				if (b.IsOdd())
 					res *= prod;
 				prod = prod * prod;
 				b >>= 1;
@@ -1316,18 +1316,24 @@ namespace TsMath
 		/// <summary>
 		/// Gets a value indicating whether this instance is even.
 		/// </summary>
-		/// <value>
+		/// <returns>
 		///   <b>true</b> if this instance is even; otherwise, <b>false</b>.
-		/// </value>
-		public bool IsEven => (this[0] & 1) == 0;
+		/// </returns>
+		public bool IsEven()
+		{
+			return (this[0] & 1) == 0;
+		}
 
 		/// <summary>
 		/// Gets a value indicating whether this instance is odd.
 		/// </summary>
-		/// <value>
+		/// <returns>
 		///   <b>true</b> if this instance is odd; otherwise, <b>false</b>.
-		/// </value>
-		public bool IsOdd => (this[0] & 1) != 0;
+		/// </returns>
+		public bool IsOdd()
+		{
+			return (this[0] & 1) != 0;
+		}
 
 		/// <summary>
 		/// Calculates the bitwise and of two <see cref="BigInteger"/> numbers.
