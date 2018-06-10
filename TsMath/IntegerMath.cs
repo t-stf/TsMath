@@ -30,10 +30,7 @@ namespace TsMath
 		/// <returns>
 		///   <b>true</b> if the specified number is even; otherwise, <b>false</b>.
 		/// </returns>
-		public static bool IsEven(this long num)
-		{
-			return (num & 1) == 0;
-		}
+		public static bool IsEven(this long num) => (num & 1) == 0;
 
 		/// <summary>
 		/// Calculates the factorial (<paramref name="n"/>!) of the given number.
