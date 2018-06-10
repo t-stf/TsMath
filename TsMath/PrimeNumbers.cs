@@ -150,16 +150,36 @@ namespace TsMath
 		/// <returns>Enumerable for prime numbers.</returns>
 		public static IEnumerable<long> EnumeratePrimes(long startNumber, long endNumber)
 		{
-			if (IsPrime(startNumber))
-				yield return startNumber;
-			var num = startNumber;
-			while (true)
+			if (startNumber <= 2)
+				yield return 2;
+			if (startNumber <= 3)
+				yield return 3;
+			if (startNumber <= 5)
+				yield return 5;
+			var num = Math.Max(startNumber, 7);
+			if ((num & 1) == 0)
+				num++;
+			var r = num % 6;
+			if (r == 3) // 3 | num
+				num += 2;
+			else if (r == 1)
 			{
-				num = NextPrime(num);
+				if (num <= endNumber && IsPrime(num))
+					yield return num;
+				num += 4;
+			}
+			while (num <= endNumber)
+			{
+				if (IsPrime(num))
+					yield return num;
+				num += 2;
 				if (num > endNumber)
 					break;
-				yield return num;
+				if (IsPrime(num))
+					yield return num;
+				num += 4;
 			}
+
 		}
 
 		/// <summary>
