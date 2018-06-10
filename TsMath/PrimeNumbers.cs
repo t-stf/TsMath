@@ -129,7 +129,7 @@ namespace TsMath
 		/// </summary>
 		/// <param name="number">The number up to which to create primes.</param>
 		/// <returns>An array with primes less than or equal to <paramref name="number"/>.</returns>
-		public static long[] GeneratePrimesBelow(int number)
+		public static long[] GeneratePrimesUpTo(int number)
 		{
 			var result = new List<long>();
 			foreach (var prime in EnumeratePrimes())
@@ -143,12 +143,12 @@ namespace TsMath
 
 		/// <summary>
 		/// Enumerates the primes starting with next prime greater than or equal to <paramref name="startNumber"/>
-		/// up to <paramref name="maxNumber"/>.
+		/// up to <paramref name="endNumber"/>.
 		/// </summary>
 		///<param name="startNumber">The staring number.</param>
-		/// <param name="maxNumber">Maximum number to iterate to.</param>
+		/// <param name="endNumber">Maximum number to iterate to (inclusive).</param>
 		/// <returns>Enumerable for prime numbers.</returns>
-		public static IEnumerable<long> EnumeratePrimes(long startNumber, long maxNumber)
+		public static IEnumerable<long> EnumeratePrimes(long startNumber, long endNumber)
 		{
 			if (IsPrime(startNumber))
 				yield return startNumber;
@@ -156,7 +156,7 @@ namespace TsMath
 			while (true)
 			{
 				num = NextPrime(num);
-				if (num > maxNumber)
+				if (num > endNumber)
 					break;
 				yield return num;
 			}

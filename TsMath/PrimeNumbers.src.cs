@@ -37,8 +37,8 @@ namespace TsMath
 		}
 
 		/// <summary>
-		/// Determines whether <paramref name="n"/> is probably a prime number. Uses the Miller–Rabin primality test,
-		/// see https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test
+		/// Determines whether <paramref name="n"/> is probably a prime number. Uses the 
+		/// [Miller–Rabin primality test](https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test).
 		/// </summary>
 		/// <remarks>This is a probabilistic test. The probability to return <b>true</b> for a composite number
 		/// is 4^(−<paramref name="k"/>). </remarks>
@@ -101,10 +101,7 @@ namespace TsMath
 					return true;
 			}
 			return false;
-
 		}
-
-
 
 		/// <summary>
 		/// Get the prime factors of a number. Starting with the lowest.
@@ -197,8 +194,6 @@ namespace TsMath
 				num += 4;
 			}
 		}
-
-
 	}
 }
 
