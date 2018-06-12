@@ -145,15 +145,28 @@ namespace TsMath
 		/// Enumerates the primes starting with next prime greater than or equal to <paramref name="startNumber"/>
 		/// up to <paramref name="endNumber"/>.
 		/// </summary>
+		/// <remarks>This algorithm uses trial divisions and is relatively slow, but allows to 
+		/// set a start number. <see cref="GetSieve(PrimeSieveType)"/> allows a faster prime number generation
+		/// for all primes starting with 2.</remarks>
 		///<param name="startNumber">The staring number.</param>
 		/// <param name="endNumber">Maximum number to iterate to (inclusive).</param>
 		/// <returns>Enumerable for prime numbers.</returns>
 		public static IEnumerable<long> EnumeratePrimes(long startNumber, long endNumber)
 		{
+			if (startNumber < 2)
+				startNumber = 2;
+			if (startNumber > endNumber)
+				yield break;
+			if (endNumber <= 2)
+				yield break;
 			if (startNumber <= 2)
 				yield return 2;
+			if (endNumber <= 3)
+				yield break;
 			if (startNumber <= 3)
 				yield return 3;
+			if (endNumber <= 5)
+				yield break;
 			if (startNumber <= 5)
 				yield return 5;
 			var num = Math.Max(startNumber, 7);
@@ -203,5 +216,22 @@ namespace TsMath
 		/// <returns>Enumerable of prime factors, as pairs (factor, exponent)</returns>
 		public static List<(BigInteger factor, int count)> GetPrimeFactors(BigInteger num) => GetPrimeFactors(num, NextProbablePrime);
 
+
+		/// <summary>
+		/// Retrieves a sieve for the generation of prime numbers.
+		/// </summary>
+		/// <param name="sieveType">The type of sieve requested.</param>
+		/// <returns>A sieve to generate prime numbers starting from 2.</returns>
+		public static IPrimeSieve GetSieve(PrimeSieveType sieveType = PrimeSieveType.Default)
+		{
+			switch (sieveType)
+			{
+				case PrimeSieveType.Eratosthenes: return new Wheel2Eratosthenes();
+				case PrimeSieveType.SegmentedEratosthenes: return new SegmentedEratosthenes();
+				case PrimeSieveType.TrialDivision: return new TrialDivisionSieve();
+				case PrimeSieveType.IncrementalEratosthenes: return new IncrEratosthenesWheel();
+			}
+			throw new ArgumentException("Invalid sieve type", nameof(sieveType));
+		}
 	}
 }
