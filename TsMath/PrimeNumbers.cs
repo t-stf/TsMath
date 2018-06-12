@@ -107,15 +107,47 @@ namespace TsMath
 		public static BigInteger NextProbablePrime(this BigInteger num) => NextPrime(num, p => IsProbablePrime(p));
 
 		/// <summary>
+		/// Enumerates the primes starting with 2. 
+		/// </summary>
+		/// <remarks>
+		/// Use this method if you does not know the upper bound for your prime numbers.
+		/// It uses a incremental sieve of Eratosthenes and is slower as any specialized sieve 
+		/// you can get with a call to <see cref="GetSieve(PrimeSieveType)"/>.
+		/// </remarks>
+		/// <returns>Enumerable for prime numbers.</returns>
+		public static IEnumerable<long> EnumeratePrimes() => new IncrementalEratosthenes().GetPrimes(long.MaxValue);
+
+		/// <summary>
+		/// Enumerates the primes starting with 2 up to <paramref name="maxExclusive"/>.
+		/// </summary>
+		/// <remarks>This is a shortcut for sieving with the default sieve (<see cref="GetSieve(PrimeSieveType)"/>).
+		/// </remarks>
+		/// <param name="maxExclusive">Maximum number to iterate to (exlusive).</param>
+		/// <returns>Enumerable for prime numbers.</returns>
+		public static IEnumerable<long> EnumeratePrimes(long maxExclusive) => GetSieve().GetPrimes(maxExclusive);
+
+
+		//public static IEnumerable<long> EnumeratePrimes(long minInclusive , long maxExclusive = long.MaxValue, IPrimeSieve sieve = null)
+		//{
+		//	sieve = sieve ?? GetSieve();
+		//	if (maxExclusive == long.MaxValue)
+		//		sieve = GetSieve(PrimeSieveType.TrialDivision);
+		//	return sieve.GetPrimes(maxExclusive);
+		//}
+
+		/// <summary>
 		/// Generates the first <paramref name="count"/> primes.
 		/// </summary>
 		/// <param name="count">The number of primes to generate.</param>
+		/// <param name="sieve">The sieve to use for the prime number generation.</param>
 		/// <returns>Containing an array with <paramref name="count"/> primes: 2, 3, 5, ...</returns>
-		public static long[] GeneratePrimes(int count)
+		public static long[] GeneratePrimes(int count, IPrimeSieve sieve = null)
 		{
 			var result = new long[count];
+			sieve = sieve ?? GetSieve();
 			int i = 0;
-			foreach (var prime in EnumeratePrimes())
+			long endNumber = (long)(100 + 1.1056 * count / Math.Log(count));
+			foreach (var prime in sieve.GetPrimes(endNumber))
 			{
 				result[i++] = prime;
 				if (i >= count)
@@ -125,82 +157,23 @@ namespace TsMath
 		}
 
 		/// <summary>
-		/// Generates primes less than or equal to <paramref name="number"/>.
+		/// Generates primes less than <paramref name="maxExlusive"/>.
 		/// </summary>
-		/// <param name="number">The number up to which to create primes.</param>
-		/// <returns>An array with primes less than or equal to <paramref name="number"/>.</returns>
-		public static long[] GeneratePrimesUpTo(int number)
+		/// <param name="maxExlusive">The number up to which to create primes.</param>
+		/// <param name="sieve">The sieve to use for the prime number generation.</param>
+		/// <returns>An array with primes less than <paramref name="maxExlusive"/>.</returns>
+		public static long[] GeneratePrimesUpTo(int maxExlusive, IPrimeSieve sieve = null)
 		{
 			var result = new List<long>();
-			foreach (var prime in EnumeratePrimes())
+			sieve = sieve ?? GetSieve();
+			foreach (var prime in sieve.GetPrimes(maxExlusive))
 			{
-				if (prime > number)
+				if (prime >= maxExlusive)
 					break;
 				result.Add(prime);
 			}
 			return result.ToArray();
 		}
-
-		/// <summary>
-		/// Enumerates the primes starting with next prime greater than or equal to <paramref name="startNumber"/>
-		/// up to <paramref name="endNumber"/>.
-		/// </summary>
-		/// <remarks>This algorithm uses trial divisions and is relatively slow, but allows to 
-		/// set a start number. <see cref="GetSieve(PrimeSieveType)"/> allows a faster prime number generation
-		/// for all primes starting with 2.</remarks>
-		///<param name="startNumber">The staring number.</param>
-		/// <param name="endNumber">Maximum number to iterate to (inclusive).</param>
-		/// <returns>Enumerable for prime numbers.</returns>
-		public static IEnumerable<long> EnumeratePrimes(long startNumber, long endNumber)
-		{
-			if (startNumber < 2)
-				startNumber = 2;
-			if (startNumber > endNumber)
-				yield break;
-			if (endNumber <= 2)
-				yield break;
-			if (startNumber <= 2)
-				yield return 2;
-			if (endNumber <= 3)
-				yield break;
-			if (startNumber <= 3)
-				yield return 3;
-			if (endNumber <= 5)
-				yield break;
-			if (startNumber <= 5)
-				yield return 5;
-			var num = Math.Max(startNumber, 7);
-			if ((num & 1) == 0)
-				num++;
-			var r = num % 6;
-			if (r == 3) // 3 | num
-				num += 2;
-			else if (r == 1)
-			{
-				if (num <= endNumber && IsPrime(num))
-					yield return num;
-				num += 4;
-			}
-			while (num <= endNumber)
-			{
-				if (IsPrime(num))
-					yield return num;
-				num += 2;
-				if (num > endNumber)
-					break;
-				if (IsPrime(num))
-					yield return num;
-				num += 4;
-			}
-
-		}
-
-		/// <summary>
-		/// Enumerates the primes starting with next prime greater than or equal to <paramref name="startNumber"/>.
-		/// </summary>
-		///<param name="startNumber">The staring number.</param>
-		/// <returns>Enumerable for prime numbers.</returns>
-		public static IEnumerable<long> EnumeratePrimes(long startNumber = 2) => EnumeratePrimes(startNumber, long.MaxValue);
 
 		/// <summary>
 		/// Get the prime factors of a number. Starting with the lowest.
@@ -226,12 +199,16 @@ namespace TsMath
 		{
 			switch (sieveType)
 			{
-				case PrimeSieveType.Eratosthenes: return new Wheel2Eratosthenes();
+				case PrimeSieveType.Eratosthenes: return new Wheel2357Eratosthenes();
 				case PrimeSieveType.SegmentedEratosthenes: return new SegmentedEratosthenes();
 				case PrimeSieveType.TrialDivision: return new TrialDivisionSieve();
-				case PrimeSieveType.IncrementalEratosthenes: return new IncrEratosthenesWheel();
 			}
 			throw new ArgumentException("Invalid sieve type", nameof(sieveType));
 		}
+
+		//public static IPrimeRangeSieve GetRangeSieve(PrimeSieveType sieveType = PrimeSieveType.Default)
+		//{
+
+		//}
 	}
 }

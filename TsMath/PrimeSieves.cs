@@ -15,6 +15,20 @@ namespace TsMath
 		/// <param name="maxExclusive">The exclusive upper bound for the prime number generation.</param>
 		/// <returns>An enumerable for the prime numbers.</returns>
 		IEnumerable<long> GetPrimes(long maxExclusive);
+
+
+	}
+
+	public interface IPrimeRangeSieve
+	{
+		/// <summary>
+		/// Enumerates all prime numbers greater than or equal to <paramref name="startInclusive"/> and less than <paramref name="endExclusive"/>.
+		/// </summary>
+		/// <param name="startInclusive">The starting number of the enumeration</param>
+		/// <param name="endExclusive">The exclusive upper bound for the prime number generation.</param>
+		/// <returns>An enumerable for the prime numbers.</returns>
+		IEnumerable<long> EnumeratePrimes(long startInclusive, long endExclusive);
+
 	}
 
 	/// <summary>
@@ -47,14 +61,6 @@ namespace TsMath
 		SegmentedEratosthenes,
 
 		/// <summary>
-		/// An incremental version of the sieve of Eratosthenes.
-		/// </summary>
-		/// <remarks>
-		/// It is a little slower than <see cref="SegmentedEratosthenes"/> but it is usable even with very large maximum numbers.
-		/// </remarks>
-		IncrementalEratosthenes,
-
-		/// <summary>
 		/// Same as <see cref="SegmentedEratosthenes"/> as a compromise between speed and memory usage.
 		/// </summary>
 		Default = SegmentedEratosthenes,
@@ -62,11 +68,86 @@ namespace TsMath
 
 	}
 
-	class TrialDivisionSieve : IPrimeSieve
+	class BasePrimeSieve : IPrimeSieve
 	{
+		public IEnumerable<long> EnumeratePrimes(long startInclusive, long endExclusive)
+		{
+			foreach (var item in GetPrimes(endExclusive))
+			{
+				if (item >= startInclusive)
+					yield return item;
+			}
+		}
+
 		public IEnumerable<long> GetPrimes(long maxExclusive)
 		{
-			return PrimeNumbers.EnumeratePrimes(2, maxExclusive - 1);
+			throw new NotImplementedException();
+		}
+	}
+
+	class TrialDivisionSieve : IPrimeRangeSieve, IPrimeSieve
+	{
+		/// <summary>
+		/// Enumerates the primes starting with next prime greater than or equal to <paramref name="startNumber"/>
+		/// up to <paramref name="endNumber"/>.
+		/// </summary>
+		/// <remarks>This algorithm uses trial divisions and is relatively slow, but allows to 
+		/// set a start number. <see cref="GetSieve(PrimeSieveType)"/> allows a faster prime number generation
+		/// for all primes starting with 2.</remarks>
+		///<param name="startNumber">The staring number.</param>
+		/// <param name="endNumber">Maximum number to iterate to (inclusive).</param>
+		/// <returns>Enumerable for prime numbers.</returns>
+		public IEnumerable<long> EnumeratePrimes(long startNumber, long endNumber)
+		{
+			if (endNumber <= 2)
+				yield break;
+			endNumber--;
+			if (startNumber < 2)
+				startNumber = 2;
+			if (startNumber > endNumber)
+				yield break;
+			if (endNumber < 2)
+				yield break;
+			if (startNumber <= 2)
+				yield return 2;
+			if (endNumber < 3)
+				yield break;
+			if (startNumber <= 3)
+				yield return 3;
+			if (endNumber < 5)
+				yield break;
+			if (startNumber <= 5)
+				yield return 5;
+			var num = Math.Max(startNumber, 7);
+			if ((num & 1) == 0)
+				num++;
+			var r = num % 6;
+			if (r == 3) // 3 | num
+				num += 2;
+			else if (r == 1)
+			{
+				if (num <= endNumber && PrimeNumbers.IsPrime(num))
+					yield return num;
+				num += 4;
+			}
+			while (num <= endNumber)
+			{
+				if (PrimeNumbers.IsPrime(num))
+					yield return num;
+				num += 2;
+				if (num > endNumber)
+					break;
+				if (PrimeNumbers.IsPrime(num))
+					yield return num;
+				num += 4;
+			}
+
+		}
+
+
+		public IEnumerable<long> GetPrimes(long maxExclusive)
+		{
+			return EnumeratePrimes(2, maxExclusive);
 		}
 	}
 
@@ -99,9 +180,108 @@ namespace TsMath
 		}
 	}
 
+	class Wheel2357Eratosthenes : IPrimeSieve
+	{
+		protected static int[] shiftTable;
+
+		static int[] downShift;
+
+		protected static bool[] mod0;
+
+		static int ngood;
+
+		const int len = 2 * 3 * 5 * 7;
+
+		static void BuildShiftTable()
+		{
+			shiftTable = new int[len];
+			downShift = new int[len];
+			mod0 = new bool[len];
+			for (int i = 0; i < len; i++)
+			{
+				if (i % 2 == 0 || i % 3 == 0 || i % 5 == 0 || i % 7 == 0)
+					mod0[i] = true;
+				else
+					ngood++;
+			}
+			int first = Array.IndexOf(mod0, false);
+			int gCounter = -1;
+			for (int i = 0; i < len; i++)
+			{
+				int next = Array.IndexOf(mod0, false, mod0[i] ? i : i + 1);
+				if (next < 0)
+				{
+					next = len + first;
+				}
+				shiftTable[i] = next - i;
+				if (!mod0[i])
+					gCounter++;
+				downShift[i] = gCounter;
+			}
+		}
+
+		static Wheel2357Eratosthenes()
+		{
+			BuildShiftTable();
+		}
+
+		public IEnumerable<long> GetPrimes(long maxExclusive)
+		{
+			if (maxExclusive <= 2)
+				yield break;
+			yield return 2;
+			if (maxExclusive <= 3)
+				yield break;
+			yield return 3;
+			if (maxExclusive <= 5)
+				yield break;
+			yield return 5;
+			if (maxExclusive <= 7)
+				yield break;
+			yield return 7;
+			if (maxExclusive <= 11)
+				yield break;
+
+			var size = maxExclusive * ngood / shiftTable.Length + ngood;
+			bool[] composite = new bool[size];
+			var sqrt = maxExclusive.IntSqrt();
+			long num = 11;
+			int remainder = 11;
+			int blockNr = 0;
+			while (num < maxExclusive)
+			{
+				var idx = blockNr * ngood + downShift[remainder];
+				if (!composite[idx])
+				{
+					yield return num;
+					if (num <= sqrt)
+					{
+						for (long i = num * num; i < maxExclusive; i += num)
+						{
+							var shi = i % len;
+							if (mod0[shi])
+								continue;
+							var ix = (i / len) * ngood + downShift[shi];
+							composite[ix] = true;
+						}
+					}
+				}
+				var shift = shiftTable[remainder];
+				num += shift;
+				remainder += shift;
+				if (remainder >= len)
+				{
+					remainder -= len;
+					blockNr++;
+				}
+			}
+		}
+	}
+
+
 	class SegmentedEratosthenes : IPrimeSieve
 	{
-		long segmentThreshold;
+		int segmentThreshold;
 
 		long maxExclusive;
 
@@ -111,7 +291,7 @@ namespace TsMath
 
 		List<long> primes;
 
-		public SegmentedEratosthenes(long segmentThreshold = 10_000)
+		public SegmentedEratosthenes(int segmentThreshold = 10_000)
 		{
 			this.segmentThreshold = segmentThreshold;
 		}
@@ -121,15 +301,14 @@ namespace TsMath
 			if (maxExclusive < segmentThreshold)
 				return new Wheel2Eratosthenes().GetPrimes(maxExclusive);
 			this.maxExclusive = maxExclusive;
-			segmentSize = maxExclusive.IntSqrt();
+			segmentSize = maxExclusive.IntSqrt() + 1;
 			segmentCount = maxExclusive / segmentSize;
-
 			return SegmentImpl();
 		}
 
 		private IEnumerable<long> SegmentImpl()
 		{
-			for (int i = 0; i < segmentCount; i++)
+			for (long i = 0; i < segmentCount; i++)
 			{
 				var en = i == 0 ? GetSegment0Primes() : GetSegmentPrimes(i);
 				foreach (var prime in en)
@@ -142,7 +321,7 @@ namespace TsMath
 		IEnumerable<long> GetSegment0Primes()
 		{
 			primes = new List<long>();
-			foreach (var prime in new Wheel2Eratosthenes().GetPrimes(segmentSize + 1))
+			foreach (var prime in new Wheel2357Eratosthenes().GetPrimes(segmentSize))
 			{
 				yield return prime;
 				primes.Add(prime);
@@ -152,15 +331,14 @@ namespace TsMath
 		IEnumerable<long> GetSegmentPrimes(long segIndex)
 		{
 			var sIndex = segIndex * segmentSize;
-			var eIndex = segIndex == segmentCount - 1 ? maxExclusive : sIndex + segmentSize;
-			eIndex--;
-			return GetSegmentPrimes(sIndex, eIndex, primes);
+			var segLen = segIndex == segmentCount - 1 ? maxExclusive - sIndex : segmentSize;
+			return GetSegmentPrimes(sIndex, segLen);
 		}
 
-		IEnumerable<long> GetSegmentPrimes(long sIndex, long eIndex, IEnumerable<long> primes)
+		IEnumerable<long> GetSegmentPrimes(long sIndex, long segLen)
 		{
-			bool[] composite = new bool[eIndex - sIndex + 1];
-			var sqrt = eIndex.IntSqrt();
+			bool[] composite = new bool[segLen];
+			var sqrt = (sIndex + segLen).IntSqrt();
 			foreach (var p in primes)
 			{
 				if (p > sqrt)
@@ -168,54 +346,19 @@ namespace TsMath
 				var startJ = p - sIndex % p;
 				if (startJ == p)
 					startJ = 0;
-				for (long j = startJ; j < composite.LongLength; j += p)
-				{
+				for (long j = startJ; j < segLen; j += p)
 					composite[j] = true;
-				}
 			}
-			for (long i = 0; i < composite.LongLength; i++)
+			for (long i = 0; i < segLen; i++)
 			{
 				if (!composite[i])
 					yield return i + sIndex;
 			}
 		}
-
 	}
 
-	class IncrEratosthenesWheel : IPrimeSieve
+	class IncrementalEratosthenes : IPrimeSieve
 	{
-
-		protected static int[] shiftTable;
-
-		protected static bool[] mod0;
-
-		static void BuildShiftTable()
-		{
-			int len = 2 * 3 * 5 * 7;
-			shiftTable = new int[len];
-			mod0 = new bool[len];
-			for (int i = 0; i < len; i++)
-			{
-				if (i % 2 == 0 || i % 3 == 0 || i % 5 == 0 || i % 7 == 0)
-					mod0[i] = true;
-			}
-			int first = Array.IndexOf(mod0, false);
-			for (int i = 0; i < len; i++)
-			{
-				int next = Array.IndexOf(mod0, false, mod0[i] ? i : i + 1);
-				if (next < 0)
-				{
-					next = len + first;
-				}
-				shiftTable[i] = next - i;
-			}
-		}
-
-		static IncrEratosthenesWheel()
-		{
-			BuildShiftTable();
-		}
-
 		class Factor
 		{
 			public long Value;
@@ -252,46 +395,29 @@ namespace TsMath
 			yield return 2;
 			if (maxExclusive <= 3)
 				yield break;
-			yield return 3;
-			if (maxExclusive <= 5)
-				yield break;
-			yield return 5;
-			if (maxExclusive <= 7)
-				yield break;
-			yield return 7;
-			if (maxExclusive <= 11)
-				yield break;
-
 			this.maxExclusive = maxExclusive;
-
 			var sqrt = maxExclusive.IntSqrt();
-
-			long num = 11;
-			const long modVal = 2 * 3 * 5 * 7;
-			while (num < maxExclusive)
+			for (long num = 3; num < maxExclusive; num += 2)
 			{
 				if (!factorsDict.TryGetValue(num, out Factor factor))
 				{
 					yield return num;
 					if (num <= sqrt)
 						factorsDict.Add(num * num, new Factor(num));
+					continue;
 				}
-				else
+				factorsDict.Remove(num);
+				while (factor != null)
 				{
-					factorsDict.Remove(num);
-					while (factor != null)
-					{
-						var next = factor.Next;
-						factor.Next = null;
-						var newNum = num + 2 * factor.Value;
-						while (mod0[newNum % modVal])
-							newNum += factor.Value;
-						if (newNum < maxExclusive)
-							AddFactors(newNum, factor);
-						factor = next;
-					}
+					var next = factor.Next;
+					factor.Next = null;
+					var newNum = num + factor.Value;
+					while (newNum % 2 == 0)
+						newNum += factor.Value;
+					if (newNum < maxExclusive)
+						AddFactors(newNum, factor);
+					factor = next;
 				}
-				num += shiftTable[num % modVal];
 			}
 		}
 
@@ -305,9 +431,7 @@ namespace TsMath
 			while (existing.Next != null)
 				existing = existing.Next;
 			existing.Next = root;
-
 		}
 	}
-
 
 }
