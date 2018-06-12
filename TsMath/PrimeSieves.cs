@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace TsMath
@@ -16,18 +17,6 @@ namespace TsMath
 		/// <returns>An enumerable for the prime numbers.</returns>
 		IEnumerable<long> GetPrimes(long maxExclusive);
 
-
-	}
-
-	public interface IPrimeRangeSieve
-	{
-		/// <summary>
-		/// Enumerates all prime numbers greater than or equal to <paramref name="startInclusive"/> and less than <paramref name="endExclusive"/>.
-		/// </summary>
-		/// <param name="startInclusive">The starting number of the enumeration</param>
-		/// <param name="endExclusive">The exclusive upper bound for the prime number generation.</param>
-		/// <returns>An enumerable for the prime numbers.</returns>
-		IEnumerable<long> EnumeratePrimes(long startInclusive, long endExclusive);
 
 	}
 
@@ -85,15 +74,12 @@ namespace TsMath
 		}
 	}
 
-	class TrialDivisionSieve : IPrimeRangeSieve, IPrimeSieve
+	class TrialDivisionSieve :  IPrimeSieve
 	{
 		/// <summary>
 		/// Enumerates the primes starting with next prime greater than or equal to <paramref name="startNumber"/>
 		/// up to <paramref name="endNumber"/>.
 		/// </summary>
-		/// <remarks>This algorithm uses trial divisions and is relatively slow, but allows to 
-		/// set a start number. <see cref="GetSieve(PrimeSieveType)"/> allows a faster prime number generation
-		/// for all primes starting with 2.</remarks>
 		///<param name="startNumber">The staring number.</param>
 		/// <param name="endNumber">Maximum number to iterate to (inclusive).</param>
 		/// <returns>Enumerable for prime numbers.</returns>
@@ -283,7 +269,7 @@ namespace TsMath
 	{
 		int segmentThreshold;
 
-		long maxExclusive;
+		long maxExclusive, minInclusive;
 
 		long segmentSize;
 
@@ -306,6 +292,20 @@ namespace TsMath
 			return SegmentImpl();
 		}
 
+		public IEnumerable<long> GetPrimeRange(long minInclusive, long maxExclusive)
+		{
+			if (minInclusive <= 2)
+				return GetPrimes(maxExclusive);
+			if (maxExclusive < segmentThreshold)
+				return GetPrimes(maxExclusive).Where(p => p >= minInclusive);
+			this.maxExclusive = maxExclusive;
+			this.minInclusive = minInclusive;
+			segmentSize = maxExclusive.IntSqrt() + 1;
+			segmentCount = maxExclusive / segmentSize;
+
+			return SegmentImplRange();
+		}
+
 		private IEnumerable<long> SegmentImpl()
 		{
 			for (long i = 0; i < segmentCount; i++)
@@ -318,14 +318,32 @@ namespace TsMath
 			}
 		}
 
+		private IEnumerable<long> SegmentImplRange()
+		{
+			var minSeg = minInclusive / segmentSize;
+			if (minSeg == segmentCount)
+				minSeg--;
+			if (minSeg > 0)
+				GetSegment0Primes();
+			for (long i = minSeg; i < segmentCount; i++)
+			{
+				var en = i == 0 ? GetSegment0Primes() : GetSegmentPrimes(i);
+				foreach (var prime in en)
+				{
+					if (prime >= minInclusive)
+						yield return prime;
+				}
+			}
+		}
+
 		IEnumerable<long> GetSegment0Primes()
 		{
 			primes = new List<long>();
 			foreach (var prime in new Wheel2357Eratosthenes().GetPrimes(segmentSize))
 			{
-				yield return prime;
 				primes.Add(prime);
 			}
+			return primes;
 		}
 
 		IEnumerable<long> GetSegmentPrimes(long segIndex)

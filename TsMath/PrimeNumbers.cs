@@ -122,18 +122,23 @@ namespace TsMath
 		/// </summary>
 		/// <remarks>This is a shortcut for sieving with the default sieve (<see cref="GetSieve(PrimeSieveType)"/>).
 		/// </remarks>
-		/// <param name="maxExclusive">Maximum number to iterate to (exlusive).</param>
+		/// <param name="maxExclusive">Maximum number to iterate to (exclusive).</param>
 		/// <returns>Enumerable for prime numbers.</returns>
 		public static IEnumerable<long> EnumeratePrimes(long maxExclusive) => GetSieve().GetPrimes(maxExclusive);
 
-
-		//public static IEnumerable<long> EnumeratePrimes(long minInclusive , long maxExclusive = long.MaxValue, IPrimeSieve sieve = null)
-		//{
-		//	sieve = sieve ?? GetSieve();
-		//	if (maxExclusive == long.MaxValue)
-		//		sieve = GetSieve(PrimeSieveType.TrialDivision);
-		//	return sieve.GetPrimes(maxExclusive);
-		//}
+		/// <summary>
+		/// Enumerates a range of primes between <paramref name="minInclusive"/> and <paramref name="maxExclusive"/>.
+		/// </summary>
+		/// <remarks>
+		/// This method uses a variant of the segmented Eratosthenes sieve (<see cref="PrimeSieveType.SegmentedEratosthenes"/>).
+		/// For very large starting numbers <paramref name="minInclusive"/> there is a significant preprocessing time
+		/// required before the iteration yields the first value.
+		/// </remarks>
+		/// <param name="minInclusive">The starting number (inclusive) to iterate from.</param>
+		/// <param name="maxExclusive">Maximum number to iterate to (exclusive).</param>
+		/// <returns>Enumerable for prime numbers.</returns>
+		public static IEnumerable<long> EnumeratePrimeRange(long minInclusive, long maxExclusive )
+			=> new SegmentedEratosthenes().GetPrimeRange(minInclusive, maxExclusive);
 
 		/// <summary>
 		/// Generates the first <paramref name="count"/> primes.
@@ -206,9 +211,6 @@ namespace TsMath
 			throw new ArgumentException("Invalid sieve type", nameof(sieveType));
 		}
 
-		//public static IPrimeRangeSieve GetRangeSieve(PrimeSieveType sieveType = PrimeSieveType.Default)
-		//{
 
-		//}
 	}
 }
