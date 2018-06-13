@@ -350,11 +350,6 @@ namespace TsMath
 		{
 			var sIndex = segIndex * segmentSize;
 			var segLen = segIndex == segmentCount - 1 ? maxExclusive - sIndex : segmentSize;
-			return GetSegmentPrimes(sIndex, segLen);
-		}
-
-		IEnumerable<long> GetSegmentPrimes(long sIndex, long segLen)
-		{
 			bool[] composite = new bool[segLen];
 			var sqrt = (sIndex + segLen).IntSqrt();
 			foreach (var p in primes)
@@ -373,6 +368,7 @@ namespace TsMath
 					yield return i + sIndex;
 			}
 		}
+
 	}
 
 	class IncrementalEratosthenes : IPrimeSieve

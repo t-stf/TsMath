@@ -18,7 +18,7 @@ namespace TsMath
 	/// </para>
 	/// </remarks>
 	[DebuggerDisplay("{ToString()}")]
-	public struct BigInteger : IEquatable<BigInteger>
+	public struct BigInteger : IEquatable<BigInteger>, IComparable<BigInteger>
 	{
 
 		internal class BaseOps

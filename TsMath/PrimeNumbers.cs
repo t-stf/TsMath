@@ -9,7 +9,10 @@ namespace TsMath
 	public static partial class PrimeNumbers
 	{
 
-		static long[] primes = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53 };
+		/// <summary>
+		/// Some small prime number for quick checks
+		/// </summary>
+		public static int[] SmallPrimes = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53 };
 
 		/// <summary>
 		/// Tests a number for primality. The result is always exact.
@@ -25,9 +28,9 @@ namespace TsMath
 			if ((num & 1) == 0)
 				return false;
 			var end = IntegerMath.IntSqrt(num);
-			for (int i = 2; i < primes.Length; i++)
+			for (int i = 2; i < SmallPrimes.Length; i++)
 			{
-				var testNum = primes[i];
+				var testNum = SmallPrimes[i];
 				if (testNum > end)
 					return true;
 				if (num % testNum == 0)
