@@ -12,7 +12,7 @@ namespace TsMath
 		/// <summary>
 		/// Some small prime number for quick checks
 		/// </summary>
-		public static int[] SmallPrimes = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53 };
+		internal static int[] SmallPrimes = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53 };
 
 		/// <summary>
 		/// Tests a number for primality. The result is always exact.
@@ -214,6 +214,16 @@ namespace TsMath
 			throw new ArgumentException("Invalid sieve type", nameof(sieveType));
 		}
 
+		/// <summary>
+		///  Retrieves the prime factors of a number.
+		/// </summary>
+		/// <param name="num">The number to factorize.</param>
+		/// <returns>The result of the factorization, containing the prime factors.</returns>
+		public static FactorizationResult<long> Factorize(long num)
+		{
+			var fact = new LongFactorizer(num);
+			return fact.Factorize();
+		}
 
 	}
 }
