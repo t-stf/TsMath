@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TsMath.Helpers;
 
 #pragma warning disable CS1591
 
@@ -13,15 +14,60 @@ namespace TsMath
 	{
 		public readonly T Factor;
 
-		public readonly int Multiplicity;
+		public int Multiplicity { get; internal set; }
 
-		public readonly bool IsPrime;
+		public bool IsPrime { get; internal set; }
 
-		internal PrimeFactor(T factor, int multi=1, bool isPrime=true)
+		internal PrimeFactor(T factor, int multi = 1, bool isPrime = true)
 		{
 			this.Factor = factor;
 			this.Multiplicity = multi;
 			this.IsPrime = isPrime;
+		}
+
+		public override string ToString()
+		{
+			var sb = new StringBuilder();
+			sb.Append(Factor);
+			int pow = Multiplicity;
+			if (pow == 2)
+				sb.Append("²");
+			else if (pow == 3)
+				sb.Append("³");
+			else if (pow > 3)
+			{
+				sb.Append('^');
+				sb.Append(pow);
+			}
+			return sb.ToString();
+		}
+
+	}
+
+	public static class PrimeFactorExtensions
+	{
+		///// <summary>
+		///// Retrieves the multiplicity of a prime factor. If the factor is not a factor of <see cref="Number"/>
+		///// </summary>
+		///// <param name="factor">The prime factor to look for.</param>
+		///// <returns>The multiplicity of <paramref name="factor"/> or zero if <paramref name="factor"/> is not 
+		///// a prime factor of <see cref="Number"/>.</returns>
+		//public static int GetMultiplicity<T>(IList<PrimeFactor<T>> primeFactors, T factor) where T : IComparable<T>
+		//{
+		//	var index = primeFactors.BinarySearch(primeFactors,factor, );
+		//	return index < 0 ? 0 : multiplicity[index];
+		//}
+
+		public static string ToString<T>(this IList<PrimeFactor<T>> primeFactors)
+		{
+			var sb = new StringBuilder();
+			for (int i = 0; i < primeFactors.Count; i++)
+			{
+				if (i > 0)
+					sb.Append("*");
+				sb.Append(primeFactors[i].ToString());
+			}
+			return sb.ToString();
 		}
 	}
 
@@ -103,37 +149,34 @@ namespace TsMath
 	{
 		protected T number;
 
-		protected bool isProbablyWrong;
+		protected Dictionary<T, PrimeFactor<T>> factors;
 
-		protected Dictionary<T, int> factors;
+		protected Stack<T> numbersToCheck;
 
 		public PrimeFactorizer(T number)
 		{
 			this.number = number;
-			factors = new Dictionary<T, int>();
+			factors = new Dictionary<T, PrimeFactor<T>>();
+			numbersToCheck = new Stack<T>();
 		}
 
-		protected void AddFactor(T factor, int multiplicity = 1)
+		protected void AddFactor(T factor, int multiplicity = 1, bool isPrime = true)
 		{
-			factors.TryGetValue(factor, out int count);
-			factors[factor] = count + multiplicity;
-		}
-
-		public FactorizationResult<T> BuildResult()
-		{
-			var facArray = new T[factors.Count];
-			var countArray = new int[factors.Count];
-			int index = 0;
-			foreach (var kv in factors.OrderBy(kv => kv.Key))
+			if (!factors.TryGetValue(factor, out PrimeFactor<T> fac))
 			{
-				facArray[index] = kv.Key;
-				countArray[index++] = kv.Value;
+				fac = new PrimeFactor<T>(factor, multiplicity, isPrime);
+				factors.Add(factor, fac);
+				return;
 			}
-			return new FactorizationResult<T>(number, facArray, countArray, !isProbablyWrong);
+			fac.IsPrime = isPrime;
+			fac.Multiplicity += multiplicity;
 		}
 
+		public PrimeFactor<T>[] BuildResult()
+		{
+			return factors.Values.OrderBy(pf => pf.Factor).ToArray();
+		}
 	}
-
 
 	class LongFactorizer : PrimeFactorizer<long>
 	{
@@ -147,21 +190,27 @@ namespace TsMath
 			for (int i = 0; i < PrimeNumbers.SmallPrimes.Length; i++)
 			{
 				var prime = PrimeNumbers.SmallPrimes[i];
-				int multiplicity = 0;
-				while (true)
-				{
-					var r = num % prime;
-					if (r != 0)
-						break;
-					num = num / prime;
-					multiplicity++;
-				}
-				if (multiplicity > 0)
-				{
-					AddFactor(prime, multiplicity);
-					if (num == 1)
-						break;
-				}
+				num = ExtractMultiple(num, prime, true);
+				if (num == 1)
+					break;
+			}
+			return num;
+		}
+
+		long ExtractMultiple(long num, long prime, bool isPrime)
+		{
+			int multiplicity = 0;
+			while (true)
+			{
+				var r = num % prime;
+				if (r != 0)
+					break;
+				num = num / prime;
+				multiplicity++;
+			}
+			if (multiplicity > 0)
+			{
+				AddFactor(prime, multiplicity, isPrime);
 			}
 			return num;
 		}
@@ -171,21 +220,65 @@ namespace TsMath
 			var num = ExtractSmallFactors(number);
 			if (num == 1)
 				return;
+			numbersToCheck.Push(num);
+			while (numbersToCheck.Count > 0)
+			{
+				num = numbersToCheck.Pop();
+				Investigate(num);
+			}
+		}
+
+		private void Investigate(long num)
+		{
 			if (num.IsPrime())
 			{
 				AddFactor(num);
 				return;
 			}
-			isProbablyWrong = true;
+			var ffac = FermatFactor(num, 1000);
+			if (ffac < 0)
+			{
+				AddFactor(num, 1, false);
+				return;
+			}
+			numbersToCheck.Push(ffac);
+			numbersToCheck.Push(num / ffac);
 		}
 
-		internal FactorizationResult<long> Factorize()
+		long FermatFactor(long num, int nRounds = int.MaxValue)
+		{
+
+
+			var a = IntegerMath.IntSqrt(num);
+			var b2 = a * a - num;
+			var cmp = b2.CompareTo(0);
+			if (cmp == 0)
+				return a;
+			if (cmp < 0)
+			{
+				b2 += (a << 1) + 1;
+				a++;
+			}
+			while (b2 <= num && nRounds-- > 0)
+			{
+				var root = b2.IntSqrt();
+				if (root * root == b2)
+					return a + root;
+				b2 += (a << 1) + 1;
+				a++;
+			}
+			return -1;
+
+		}
+
+		internal PrimeFactor<long>[] Factorize()
 		{
 			if (number <= 1)
 				throw new ArgumentException("Only numbers >1 can be factorized");
 			DoFactorize();
 			return BuildResult();
 		}
+
 	}
 
 	class BigIntegerFactorizer : PrimeFactorizer<BigInteger>

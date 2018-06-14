@@ -219,7 +219,7 @@ namespace TsMath
 		/// </summary>
 		/// <param name="num">The number to factorize.</param>
 		/// <returns>The result of the factorization, containing the prime factors.</returns>
-		public static FactorizationResult<long> Factorize(long num)
+		public static PrimeFactor<long>[] Factorize(long num)
 		{
 			var fact = new LongFactorizer(num);
 			return fact.Factorize();
