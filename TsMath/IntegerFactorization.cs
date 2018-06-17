@@ -151,13 +151,13 @@ namespace TsMath
 
 		protected Dictionary<T, PrimeFactor<T>> factors;
 
-		protected Stack<T> numbersToCheck;
+		protected Stack<PrimeFactor<T>> numbersToCheck;
 
 		public PrimeFactorizer(T number)
 		{
 			this.number = number;
 			factors = new Dictionary<T, PrimeFactor<T>>();
-			numbersToCheck = new Stack<T>();
+			numbersToCheck = new Stack<PrimeFactor<T>>();
 		}
 
 		protected void AddFactor(T factor, int multiplicity = 1, bool isPrime = true)
@@ -220,55 +220,80 @@ namespace TsMath
 			var num = ExtractSmallFactors(number);
 			if (num == 1)
 				return;
-			numbersToCheck.Push(num);
+			numbersToCheck.Push(new PrimeFactor<long>(num, 1, false));
 			while (numbersToCheck.Count > 0)
 			{
-				num = numbersToCheck.Pop();
-				Investigate(num);
+				var fac = numbersToCheck.Pop();
+				Investigate(fac);
 			}
 		}
 
-		private void Investigate(long num)
+		private void Investigate(PrimeFactor<long> fac)
 		{
+			var num = fac.Factor;
 			if (num.IsPrime())
 			{
-				AddFactor(num);
+				AddFactor(num, fac.Multiplicity);
 				return;
 			}
 			var ffac = FermatFactor(num, 1000);
-			if (ffac < 0)
+			if (ffac > 0)
 			{
-				AddFactor(num, 1, false);
+				var ffac2 = num / ffac;
+				if (ffac == ffac2)
+					numbersToCheck.Push(new PrimeFactor<long>(ffac, fac.Multiplicity * 2, false));
+				else
+				{
+					numbersToCheck.Push(new PrimeFactor<long>(ffac, fac.Multiplicity, false));
+					numbersToCheck.Push(new PrimeFactor<long>(ffac2, fac.Multiplicity, false));
+				}
 				return;
 			}
-			numbersToCheck.Push(ffac);
-			numbersToCheck.Push(num / ffac);
+			// now we make some trial divisions
+			long start = PrimeNumbers.SmallPrimes[PrimeNumbers.SmallPrimes.Length - 1] + 2;
+			long upperBound = IntegerMath.IntSqrt(num);
+			for (long div = start; div <= upperBound; div += 2)
+			{
+				if (num % div == 0)
+				{
+					int pow = 0;
+					while (num % div == 0)
+					{
+						pow++;
+						num /= div;
+					}
+					numbersToCheck.Push(new PrimeFactor<long>(div, fac.Multiplicity * pow, false));
+					if (num > 1)
+						numbersToCheck.Push(new PrimeFactor<long>(num, fac.Multiplicity, false));
+					return;
+				}
+			}
+			AddFactor(num, fac.Multiplicity, false);
 		}
 
 		long FermatFactor(long num, int nRounds = int.MaxValue)
 		{
-
-
-			var a = IntegerMath.IntSqrt(num);
-			var b2 = a * a - num;
-			var cmp = b2.CompareTo(0);
-			if (cmp == 0)
-				return a;
-			if (cmp < 0)
+			var s = IntegerMath.IntSqrt(num);
+			if (s * s == num)
+				return s;
+			s += 1;
+			var u = 2 * s + 1;
+			var v = 1;
+			var r = s * s - num;
+			while (r != 0 && nRounds-- > 0)
 			{
-				b2 += (a << 1) + 1;
-				a++;
+				while (r > 0)
+				{
+					r -= v;
+					v += 2;
+				}
+				if (r < 0)
+				{
+					r += u;
+					u += 2;
+				}
 			}
-			while (b2 <= num && nRounds-- > 0)
-			{
-				var root = b2.IntSqrt();
-				if (root * root == b2)
-					return a + root;
-				b2 += (a << 1) + 1;
-				a++;
-			}
-			return -1;
-
+			return r == 0 ? (u - v) >> 1 : -1;
 		}
 
 		internal PrimeFactor<long>[] Factorize()
