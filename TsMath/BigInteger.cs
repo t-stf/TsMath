@@ -675,7 +675,44 @@ namespace TsMath
 			else
 				BaseOps.SubFrom(sumDigs, b, dstLen);
 			return new BigInteger(sumDigs, fDestNeg);
+		}
 
+		private static BigInteger Add(in BigInteger a, in BigInteger b)
+		{
+			if (a.digits == null && b.digits == null)
+			{
+				ulong lsum = (ulong)a.lenUsedOrDigit0 + b.lenUsedOrDigit0;
+				return new BigInteger(lsum, a.isNegative);
+			}
+			//at least one number is not small 
+			int dstLen = Math.Max(a.DigitCount, b.DigitCount) + 1;
+			uint[] sumDigs = new uint[dstLen];
+			a.CopyDigitsTo(sumDigs);
+			BaseOps.AddTo(sumDigs, b, dstLen - 1);
+			return new BigInteger(sumDigs, a.isNegative);
+		}
+
+		private static BigInteger Sub(BigInteger a, BigInteger b)
+		{
+			bool resSign = a.isNegative;
+			var cmp = CompareUnsigned(a, b);
+			if (cmp == 0)
+				return Zero;
+			if (cmp < 0)
+			{
+				BigInteger c = a; a = b; b = c;
+				resSign = b.isNegative;
+			}
+			if (a.digits == null && b.digits == null)
+			{
+				ulong ldiff = (ulong)a.lenUsedOrDigit0 - b.lenUsedOrDigit0;
+				return new BigInteger(ldiff, resSign);
+			}
+			int dstLen = a.DigitCount;
+			uint[] sumDigs = new uint[dstLen];
+			a.CopyDigitsTo(sumDigs);
+			BaseOps.SubFrom(sumDigs, b, dstLen);
+			return new BigInteger(sumDigs, resSign);
 		}
 
 		/// <summary>
@@ -686,7 +723,7 @@ namespace TsMath
 		/// <returns>The result of the addition.</returns>
 		public static BigInteger operator +(BigInteger a, BigInteger b)
 		{
-			return AddSub(a, b, false);
+			return a.isNegative == b.isNegative ? Add(a, b) : Sub(a, -b);
 		}
 
 		/// <summary>
@@ -699,7 +736,7 @@ namespace TsMath
 		/// </returns>
 		public static BigInteger operator -(BigInteger a, BigInteger b)
 		{
-			return AddSub(a, b, true);
+			return a.isNegative == b.isNegative ? Sub(a, b) : Add(a, -b);
 		}
 
 		/// <summary>
@@ -709,6 +746,8 @@ namespace TsMath
 		/// <returns>The incremented number.</returns>
 		public static BigInteger operator ++(BigInteger a)
 		{
+			if (a.digits == null && a.lenUsedOrDigit0 < BaseOps.MaxDigitValue)
+				return new BigInteger(a.isNegative ? a.lenUsedOrDigit0 - 1 : a.lenUsedOrDigit0 + 1, a.isNegative);
 			return AddSub(a, One, false);
 		}
 
@@ -719,6 +758,8 @@ namespace TsMath
 		/// <returns>The decremented number.</returns>
 		public static BigInteger operator --(BigInteger a)
 		{
+			if (a.digits == null && a > 0 && a.lenUsedOrDigit0 < BaseOps.MaxDigitValue)
+				return new BigInteger(a.isNegative ? a.lenUsedOrDigit0 + 1 : a.lenUsedOrDigit0 - 1, a.isNegative);
 			return AddSub(a, One, true);
 		}
 
@@ -754,12 +795,7 @@ namespace TsMath
 			{
 				ulong dd = a.lenUsedOrDigit0;
 				dd *= b.lenUsedOrDigit0;
-				uint carryOver = (uint)(dd >> BaseOps.BitsPerDigit);
-				if (carryOver == 0)
-					return new BigInteger((uint)dd, fNeg);
-				uint[] sRes = new uint[2];
-				sRes[0] = (uint)dd; sRes[1] = carryOver;
-				return new BigInteger(sRes, fNeg);
+				return new BigInteger(dd, fNeg);
 			}
 			if (a.DigitCount < BigIntegerKaratsubaThreshold || b.DigitCount < BigIntegerKaratsubaThreshold)
 			{
