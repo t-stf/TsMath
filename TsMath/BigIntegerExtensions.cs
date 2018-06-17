@@ -30,14 +30,7 @@ namespace TsMath
 		/// Gets the absolute value of this <see cref="BigInteger"/>.
 		/// </summary>
 		/// <returns></returns>
-		public static BigInteger Abs(this BigInteger value)
-		{
-			if (!value.IsNegative)
-				return value;
-			value.IsNegative = false;
-			return value;
-		}
-
+		public static BigInteger Abs(this BigInteger value) => value.IsNegative ? -value : value;
 
 		/// <summary>
 		/// Returns the number of decimal digits of the provided number.

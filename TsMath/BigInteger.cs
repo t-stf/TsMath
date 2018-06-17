@@ -30,6 +30,8 @@ namespace TsMath
 
 			public const uint HalfValue = (uint.MaxValue >> 1) + 1;
 
+			public const ulong MaxDigitValue = uint.MaxValue;
+
 			public static double Log2DivLogE;
 
 			static BaseOps()
@@ -348,10 +350,13 @@ namespace TsMath
 		/// </summary>
 		uint lenUsedOrDigit0;
 
+		private bool isNegative;
+
 		/// <summary>
 		/// Digits in lo to hi order; null if number has only one digit
 		/// </summary>
 		private uint[] digits;
+
 
 		bool IsSmall => digits == null;
 
@@ -361,7 +366,7 @@ namespace TsMath
 		/// <value>
 		/// <b>true</b> if this instance is negative; otherwise, <b>false</b>.
 		/// </value>
-		public bool IsNegative { get; internal set; }
+		public bool IsNegative { get => isNegative; }
 
 		/// <summary>
 		/// The <see cref="BigInteger"/> representing zero (0).
@@ -377,7 +382,6 @@ namespace TsMath
 		/// The <see cref="BigInteger"/> representing minus one (-1).
 		/// </summary>
 		public static readonly BigInteger MinusOne = new BigInteger(-1);
-
 
 		/// <summary>
 		/// The <see cref="BigInteger"/> representing one (2).
@@ -430,12 +434,12 @@ namespace TsMath
 				digits = null;
 			}
 			if (fIsZero)
-				IsNegative = false;
+				isNegative = false;
 		}
 
 		internal BigInteger(uint[] digs, bool fNeg)
 		{
-			this.digits = digs; this.IsNegative = fNeg; this.lenUsedOrDigit0 = 0;
+			this.digits = digs; this.isNegative = fNeg; this.lenUsedOrDigit0 = 0;
 			Trim();
 		}
 
@@ -447,35 +451,31 @@ namespace TsMath
 		public BigInteger(uint d, bool fNeg)
 		{
 			digits = null;
-			IsNegative = fNeg;
+			isNegative = fNeg;
 			if (d == 0)
-				IsNegative = false;
+				isNegative = false;
 			lenUsedOrDigit0 = d;
-
 		}
 
 		private BigInteger(ulong dd, bool fNeg)
 		{
-			uint übertrag = (uint)(dd >> BaseOps.BitsPerDigit);
-			IsNegative = fNeg;
-			if (übertrag == 0)
+			isNegative = fNeg && dd != 0;
+			if (dd <= BaseOps.MaxDigitValue)
 			{
-				digits = null; lenUsedOrDigit0 = (uint)dd;
+				digits = null;
+				lenUsedOrDigit0 = (uint)dd;
+				return;
 			}
-			else
-			{
-				digits = new uint[2];
-				digits[0] = (uint)dd; digits[1] = übertrag;
-				lenUsedOrDigit0 = 2;
-			}
-			if (dd == 0)
-				IsNegative = false;
+			digits = new uint[2];
+			digits[0] = (uint)dd;
+			digits[1] = (uint)(dd >> BaseOps.BitsPerDigit);
+			lenUsedOrDigit0 = 2;
 		}
 
 		internal BigInteger(BigInteger a)
 		{
 			this.digits = a.digits;
-			this.IsNegative = a.IsNegative;
+			this.isNegative = a.IsNegative;
 			this.lenUsedOrDigit0 = a.lenUsedOrDigit0;
 		}
 
@@ -553,7 +553,7 @@ namespace TsMath
 				BigInteger biDigit = new BigInteger(di, false);
 				dlen = BaseOps.AddTo(digits, biDigit, dlen);
 			}
-			this.IsNegative = locNeg;
+			this.isNegative = locNeg;
 			Trim();
 			return true;
 		}
@@ -619,6 +619,12 @@ namespace TsMath
 				Array.Copy(digits, da, (int)lenUsedOrDigit0);
 		}
 
+		private static BigInteger AddSubSmall(uint a, uint b, bool fSub)
+		{
+			bool swap = fSub;
+			return BigInteger.Zero;
+		}
+
 		/// <summary>
 		/// Core routine for Addition and Subtraction
 		/// </summary>
@@ -628,12 +634,14 @@ namespace TsMath
 		/// <returns>Result of operation</returns>
 		static BigInteger AddSub(BigInteger a, BigInteger b, bool fSub)
 		{
-			bool sa = a.IsNegative, sb = b.IsNegative;
+			//if (a.digits == null && b.digits == null)
+			//	return AddSubSmall(a.lenUsedOrDigit0, b.lenUsedOrDigit0, fSub);
+			bool sa = a.isNegative, sb = b.isNegative;
 			if (fSub)
 				sb = !sb;
 
 			bool fOpPlus = sa == sb;
-			bool fDestNeg = a.IsNegative;
+			bool fDestNeg = a.isNegative;
 			if (!fOpPlus)
 			{
 				int cmp = CompareUnsigned(a, b);
@@ -655,13 +663,7 @@ namespace TsMath
 					dd += b.lenUsedOrDigit0;
 				else
 					dd -= b.lenUsedOrDigit0;
-				uint carryover = (uint)(dd >> BaseOps.BitsPerDigit);
-				if (carryover == 0)
-					return new BigInteger((uint)dd, fDestNeg);
-				// overflow
-				uint[] sRes = new uint[2];
-				sRes[0] = (uint)dd; sRes[1] = carryover;
-				return new BigInteger(sRes, fDestNeg);
+				return new BigInteger(dd, fDestNeg);
 			}
 
 			//at least one number is not small 
@@ -730,7 +732,7 @@ namespace TsMath
 		public static BigInteger operator -(BigInteger a)
 		{
 			if (!a.IsZero())
-				a.IsNegative = !a.IsNegative;
+				a.isNegative = !a.isNegative;
 			return a;
 		}
 
@@ -798,7 +800,7 @@ namespace TsMath
 			int b = BaseOps.BitsPerDigit * half;
 
 			BigInteger result = (z2 << (2 * b)) + (z1 << b) + z0;
-			result.IsNegative = x.IsNegative != y.IsNegative;
+			result.isNegative = x.isNegative != y.isNegative;
 			return result;
 		}
 
@@ -969,8 +971,8 @@ namespace TsMath
 
 			var quotient = DivRemWorker(dividend.Abs(), divisor.Abs(), out remainder);
 			if (!remainder.IsZero())
-				remainder.IsNegative = fRNeg;
-			quotient.IsNegative = fQNeg && !quotient.IsZero();
+				remainder.isNegative = fRNeg;
+			quotient.isNegative = fQNeg && !quotient.IsZero();
 			return quotient;
 		}
 
@@ -1094,7 +1096,7 @@ namespace TsMath
 			List<char> lc = new List<char>();
 			BigInteger a = this, r = Zero;
 			if (a.IsNegative)
-				a.IsNegative = false;
+				a.isNegative = false;
 			do
 			{
 				a = DivRem(a, biBasis, out r);
@@ -1185,10 +1187,7 @@ namespace TsMath
 		/// <returns>
 		/// <b>true</b> if this instance is zero; otherwise, <b>false</b>.
 		/// </returns>
-		public bool IsZero()
-		{
-			return digits == null && lenUsedOrDigit0 == 0 && !IsNegative;
-		}
+		public bool IsZero() => digits == null && lenUsedOrDigit0 == 0 && !IsNegative;
 
 		/// <summary>
 		/// Gets a value indicating whether this instance is one.
