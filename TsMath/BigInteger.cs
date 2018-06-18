@@ -582,7 +582,7 @@ namespace TsMath
 
 		internal int RightmostDecimalDigit => (int)(this[0] % 10);
 
-		private static int CompareUnsigned(BigInteger a, BigInteger b)
+		private static int CompareUnsigned(in BigInteger a, in BigInteger b)
 		{
 			// quick check if both numbers are small
 			if (a.digits == null && b.digits == null)
@@ -625,58 +625,6 @@ namespace TsMath
 			return BigInteger.Zero;
 		}
 
-		/// <summary>
-		/// Core routine for Addition and Subtraction
-		/// </summary>
-		/// <param name="a">First number.</param>
-		/// <param name="b">Second number.</param>
-		/// <param name="fSub">true if to subtract</param>
-		/// <returns>Result of operation</returns>
-		static BigInteger AddSub(BigInteger a, BigInteger b, bool fSub)
-		{
-			//if (a.digits == null && b.digits == null)
-			//	return AddSubSmall(a.lenUsedOrDigit0, b.lenUsedOrDigit0, fSub);
-			bool sa = a.isNegative, sb = b.isNegative;
-			if (fSub)
-				sb = !sb;
-
-			bool fOpPlus = sa == sb;
-			bool fDestNeg = a.isNegative;
-			if (!fOpPlus)
-			{
-				int cmp = CompareUnsigned(a, b);
-				if (cmp == 0)
-					return Zero;
-				if (cmp < 0)
-				{
-					BigInteger c = a; a = b; b = c;
-					bool sc = sa; sa = sb; sb = sc;
-				}
-				fDestNeg = sa;
-			}
-
-			//both numbers are small
-			if (a.digits == null && b.digits == null)
-			{
-				ulong dd = a.lenUsedOrDigit0;
-				if (fOpPlus)
-					dd += b.lenUsedOrDigit0;
-				else
-					dd -= b.lenUsedOrDigit0;
-				return new BigInteger(dd, fDestNeg);
-			}
-
-			//at least one number is not small 
-			int dstLen = !fOpPlus ? a.DigitCount : Math.Max(a.DigitCount, b.DigitCount) + 1;
-			uint[] sumDigs = new uint[dstLen];
-			a.CopyDigitsTo(sumDigs);
-			if (fOpPlus)
-				BaseOps.AddTo(sumDigs, b, dstLen - 1);
-			else
-				BaseOps.SubFrom(sumDigs, b, dstLen);
-			return new BigInteger(sumDigs, fDestNeg);
-		}
-
 		private static BigInteger Add(in BigInteger a, in BigInteger b)
 		{
 			if (a.digits == null && b.digits == null)
@@ -701,7 +649,7 @@ namespace TsMath
 			if (cmp < 0)
 			{
 				BigInteger c = a; a = b; b = c;
-				resSign = b.isNegative;
+				resSign = !b.isNegative;
 			}
 			if (a.digits == null && b.digits == null)
 			{
@@ -744,11 +692,11 @@ namespace TsMath
 		/// </summary>
 		/// <param name="a">The number.</param>
 		/// <returns>The incremented number.</returns>
-		public static BigInteger operator ++(BigInteger a)
+		public static BigInteger operator ++(in BigInteger a)
 		{
 			if (a.digits == null && a.lenUsedOrDigit0 < BaseOps.MaxDigitValue)
 				return new BigInteger(a.isNegative ? a.lenUsedOrDigit0 - 1 : a.lenUsedOrDigit0 + 1, a.isNegative);
-			return AddSub(a, One, false);
+			return a + One;
 		}
 
 		/// <summary>
@@ -756,11 +704,11 @@ namespace TsMath
 		/// </summary>
 		/// <param name="a">The number.</param>
 		/// <returns>The decremented number.</returns>
-		public static BigInteger operator --(BigInteger a)
+		public static BigInteger operator --(in BigInteger a)
 		{
 			if (a.digits == null && a > 0 && a.lenUsedOrDigit0 < BaseOps.MaxDigitValue)
 				return new BigInteger(a.isNegative ? a.lenUsedOrDigit0 + 1 : a.lenUsedOrDigit0 - 1, a.isNegative);
-			return AddSub(a, One, true);
+			return a - One;
 		}
 
 		/// <summary>
@@ -940,24 +888,19 @@ namespace TsMath
 			return new BigInteger(upperInts, false);
 		}
 
-		static BigInteger DivRemWorker(BigInteger a, BigInteger b, out BigInteger r)
+		static BigInteger DivRemWorker(in BigInteger a,in  BigInteger b, out BigInteger r)
 		{
 			//special case small numbers
 			if (b.digits == null && a.DigitCount <= 2)
 			{
-				ulong dd = a[1]; dd <<= BaseOps.BitsPerDigit;
+				ulong dd = a[1];
+				dd <<= BaseOps.BitsPerDigit;
 				dd |= a[0];
 				ulong ad = dd;
 				dd /= b.lenUsedOrDigit0;
-				ad -= (ulong)(dd * b.lenUsedOrDigit0);
-				r = new BigInteger((uint)ad, false);
-				uint carryOver = (uint)(dd >> BaseOps.BitsPerDigit);
-				if (carryOver == 0)
-					return new BigInteger((uint)dd, false);
-				// carry over
-				uint[] sRes = new uint[2];
-				sRes[0] = (uint)dd; sRes[1] = carryOver;
-				return new BigInteger(sRes, false);
+				ad -= (dd * b.lenUsedOrDigit0);
+				r = new BigInteger(ad, false);
+				return new BigInteger(dd, false);
 			}
 
 			//|a|<=|b|
@@ -977,8 +920,6 @@ namespace TsMath
 				r = Zero;
 				return One;
 			}
-			a = a.Abs();
-			b = b.Abs();
 			BigInteger quotient;
 			if ((a.DigitCount - b.DigitCount) >= TsMathGlobals.BigIntegerRecursiveDivRemThreshold)
 				quotient = DivRemRecursive(a, b, out r);
