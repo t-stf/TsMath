@@ -143,6 +143,12 @@ namespace TsMath
 		/// <returns>The position of the most significant bit of this number.</returns>
 		public static int GetMostSignificantBitPosition(this long num)
 		{
+			if (num < 0)
+			{
+				if (num == long.MinValue)
+					return 64;
+				num = -num;
+			}
 			long start = 1L << 62;
 			int pos = 63;
 			while (start > 0)

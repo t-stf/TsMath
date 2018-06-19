@@ -580,8 +580,6 @@ namespace TsMath
 			}
 		}
 
-		internal int RightmostDecimalDigit => (int)(this[0] % 10);
-
 		private static int CompareUnsigned(in BigInteger a, in BigInteger b)
 		{
 			// quick check if both numbers are small
@@ -617,12 +615,6 @@ namespace TsMath
 				da[0] = lenUsedOrDigit0;
 			else
 				Array.Copy(digits, da, (int)lenUsedOrDigit0);
-		}
-
-		private static BigInteger AddSubSmall(uint a, uint b, bool fSub)
-		{
-			bool swap = fSub;
-			return BigInteger.Zero;
 		}
 
 		private static BigInteger Add(in BigInteger a, in BigInteger b)
@@ -1233,17 +1225,6 @@ namespace TsMath
 		/// <b>true</b> if both <paramref name="a"/> is greater than <paramref name="b"/>; <b>false</b> otherwise.
 		/// </returns>
 		public static bool operator >(BigInteger a, BigInteger b) => a.CompareTo(b) > 0;
-
-		internal int Num10Digits
-		{
-			get
-			{
-				int nd = (int)(DigitCount * BaseOps.BitsPerDigit / BaseOps.Log2(10));
-				if (nd <= 0)
-					nd = 0;
-				return nd;
-			}
-		}
 
 		/// <summary>
 		/// The position of the most significant bit of this number.

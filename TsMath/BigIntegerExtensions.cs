@@ -150,9 +150,23 @@ namespace TsMath
 			return BigInteger.Parse(s);
 		}
 
-
-
-
+		/// <summary>
+		/// Calculates <paramref name="num"/> % 10.
+		/// </summary>
+		/// <param name="num">The number to calculate the remainder for.</param>
+		/// <returns><paramref name="num"/> % 10.</returns>
+		public static int Remainder10(this BigInteger num)
+		{
+			uint rem =  num[0] % 10;
+			for (int i = 1; i < num.DigitCount; i++)
+			{
+				rem += 6 * (num[i] % 10);
+			}
+			rem %= 10;
+			if (num.IsNegative)
+				rem = 10 - rem;
+			return (int)rem;
+		}
 
 	}
 }
