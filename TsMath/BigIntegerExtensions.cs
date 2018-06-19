@@ -141,23 +141,25 @@ namespace TsMath
 		/// Converts an <see cref="string" />-value to a <see cref="BigInteger" />.
 		/// </summary>
 		/// <param name="s">The value to convert.</param>
+		/// <param name="base">The base to convert the number to.</param>
 		/// <returns>
 		/// The converted value.
 		/// </returns>
 		/// <seealso cref="BigInteger.Parse(string, int)"/>
-		public static BigInteger ToBigInteger(this string s)
+		public static BigInteger ToBigInteger(this string s, int @base = 10)
 		{
-			return BigInteger.Parse(s);
+			return BigInteger.Parse(s, @base);
 		}
 
 		/// <summary>
-		/// Calculates <paramref name="num"/> % 10.
+		/// Calculates the remainder of a number for the division by 10.
 		/// </summary>
+		/// <remarks><see cref="DivRem10(BigInteger)"/> allows you to calculate the quotient and remainder together.</remarks>
 		/// <param name="num">The number to calculate the remainder for.</param>
-		/// <returns><paramref name="num"/> % 10.</returns>
+		/// <returns>The remainder.</returns>
 		public static int Remainder10(this BigInteger num)
 		{
-			uint rem =  num[0] % 10;
+			uint rem = num[0] % 10;
 			for (int i = 1; i < num.DigitCount; i++)
 			{
 				rem += 6 * (num[i] % 10);
@@ -168,5 +170,19 @@ namespace TsMath
 			return (int)rem;
 		}
 
+		/// <summary>
+		/// Calculates the quotient and remainder of a number for the division by 10.
+		/// </summary>
+		/// <param name="num">The number to divide by 10.</param>
+		/// <remarks>
+		/// If you are only interested in the remainder, you should use <see cref="Remainder10(BigInteger)"/> because
+		/// that method is faster.
+		/// </remarks>
+		/// <returns>The result containing a value pair of quotient and the remainder.</returns>
+		public static (BigInteger div, int rem) DivRem10(this BigInteger num)
+		{
+			var result = BigInteger.SingleDigitDivRemWorker(num, 10, out uint r);
+			return (result, (int)r);
+		}
 	}
 }

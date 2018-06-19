@@ -177,13 +177,6 @@ namespace TsMath
 				return MinusOne;
 			}
 
-			public static char Index2Char(int i)
-			{
-				if (i < 10)
-					return (char)('0' + i);
-				i -= 10;
-				return (char)('a' + i);
-			}
 
 			public static int DigitShiftUp(uint[] a, int len, uint newDigit)
 			{
@@ -519,7 +512,7 @@ namespace TsMath
 			return true;
 		}
 
-		private bool TryParseIn(string s, int basis, bool ignoreSign)
+		private bool TryParseIn(string s, int @base, bool ignoreSign)
 		{
 			if (string.IsNullOrEmpty(s))
 				return false;
@@ -539,16 +532,16 @@ namespace TsMath
 			}
 			if (s.Length == start)
 				return false;
-			int lr = (int)(BaseOps.Log2(basis) / BaseOps.BitsPerDigit * (s.Length - start)) + 1;
+			int lr = (int)(BaseOps.Log2(@base) / BaseOps.BitsPerDigit * (s.Length - start)) + 1;
 			digits = new uint[lr];
 			int dlen = 1;
 			uint[] dummy = new uint[1];
 
 			for (int i = start; i < s.Length; i++)
 			{
-				dlen = BaseOps.Multiply(digits, (uint)basis, dlen);
+				dlen = BaseOps.Multiply(digits, (uint)@base, dlen);
 				uint di = BaseOps.DigitIndex(s[i]);
-				if (di == BaseOps.MinusOne || di >= basis)
+				if (di == BaseOps.MinusOne || di >= @base)
 					return false;
 				BigInteger biDigit = new BigInteger(di, false);
 				dlen = BaseOps.AddTo(digits, biDigit, dlen);
@@ -880,29 +873,47 @@ namespace TsMath
 			return new BigInteger(upperInts, false);
 		}
 
-		static BigInteger DivRemWorker(in BigInteger a,in  BigInteger b, out BigInteger r)
+		internal static BigInteger SingleDigitDivRemWorker(in BigInteger a, uint b, out uint r)
 		{
-			//special case small numbers
-			if (b.digits == null && a.DigitCount <= 2)
+			if (a.DigitCount <= 2)
 			{
 				ulong dd = a[1];
 				dd <<= BaseOps.BitsPerDigit;
 				dd |= a[0];
 				ulong ad = dd;
-				dd /= b.lenUsedOrDigit0;
-				ad -= (dd * b.lenUsedOrDigit0);
-				r = new BigInteger(ad, false);
+				dd /= b;
+				ad -= (dd * b);
+				r = (uint)ad;
 				return new BigInteger(dd, false);
 			}
-
-			//|a|<=|b|
-			if (a.DigitCount < b.DigitCount)
+			var resultArray = new uint[a.DigitCount];
+			ulong digit = a[a.DigitCount - 1];
+			for (int i = a.DigitCount - 2; i >= 0; i--)
 			{
-				r = a;
-				return Zero;
+				digit = (digit << BaseOps.BitsPerDigit) | a[i];
+				var div = digit / b;
+				if (div > BaseOps.MaxDigitValue)
+				{
+					resultArray[i + 1] += (uint)(div >> BaseOps.BitsPerDigit);
+				}
+				resultArray[i] = (uint)div;
+				digit -= div * b;
+			}
+			r = (uint)digit;
+			return new BigInteger(resultArray, false);
+		}
+
+		static BigInteger DivRemWorker(in BigInteger a, in BigInteger b, out BigInteger r)
+		{
+			//special case small divisors
+			if (b.digits == null)
+			{
+				var retval = SingleDigitDivRemWorker(a, b.lenUsedOrDigit0, out uint rint);
+				r = new BigInteger(rint, false);
+				return retval;
 			}
 			int cmpRes = CompareUnsigned(a, b);
-			if (cmpRes < 0)
+			if (cmpRes < 0) //|a|<=|b|
 			{
 				r = a;
 				return Zero;
@@ -1056,22 +1067,24 @@ namespace TsMath
 		/// <summary>
 		/// Returns a <see cref="string" /> that represents this instance.
 		/// </summary>
-		/// <param name="maxDecimalDigits">The maximum number of decimal digits to use, more digits will be cut off.</param>
+		/// <param name="maxDecimalDigits">The maximum number of digits for the result string, exceeding digits will be cut off.</param>
 		/// <param name="base">The base of the number conversion.</param>
 		/// <returns>A <see cref="string" /> that represents this instance.</returns>
 		public string ToString(int maxDecimalDigits, int @base = 10)
 		{
-			BigInteger biBasis = @base;
+			if (@base <= 1 || @base >= 36)
+				throw new ArgumentOutOfRangeException(nameof(@base));
 			List<char> lc = new List<char>();
-			BigInteger a = this, r = Zero;
+			BigInteger a = this;
+			uint r = 0;
 			if (a.IsNegative)
 				a.isNegative = false;
 			do
 			{
-				a = DivRem(a, biBasis, out r);
-				lc.Add(BaseOps.Index2Char((int)r.lenUsedOrDigit0));
+				a = SingleDigitDivRemWorker(a, (uint)@base, out r);
+				lc.Add(Index2Char(r));
 			} while (a != 0 && lc.Count < maxDecimalDigits);
-			if (IsNegative)
+			if (isNegative)
 				lc.Add('-');
 			if (a != 0)
 				for (int i = 0; i < 3; i++)
@@ -1085,6 +1098,14 @@ namespace TsMath
 			if (a != null)
 				sret += string.Format(" [{0}]", (int)(BigInteger.Log(this, 10) + 0.5));
 			return sret;
+
+			char Index2Char(uint i)
+			{
+				if (i < 10)
+					return (char)('0' + i);
+				i -= 10;
+				return (char)('a' + i);
+			}
 		}
 
 		/// <summary>
