@@ -350,16 +350,13 @@ namespace TsMath
 		/// </summary>
 		private uint[] digits;
 
-
-		bool IsSmall => digits == null;
-
 		/// <summary>
 		/// Gets a value indicating whether this instance is negative.
 		/// </summary>
-		/// <value>
+		/// <returns>
 		/// <b>true</b> if this instance is negative; otherwise, <b>false</b>.
-		/// </value>
-		public bool IsNegative { get => isNegative; }
+		/// </returns>
+		public bool IsNegative() => isNegative;
 
 		/// <summary>
 		/// The <see cref="BigInteger"/> representing zero (0).
@@ -400,7 +397,7 @@ namespace TsMath
 		{
 			get
 			{
-				if (IsNegative)
+				if (IsNegative())
 					return -1;
 				if (this == 0)
 					return 0;
@@ -468,17 +465,17 @@ namespace TsMath
 		internal BigInteger(BigInteger a)
 		{
 			this.digits = a.digits;
-			this.isNegative = a.IsNegative;
+			this.isNegative = a.IsNegative();
 			this.lenUsedOrDigit0 = a.lenUsedOrDigit0;
 		}
 
 		/// <summary>
-		/// Parses the specified string.
+		/// Converts the specified string to a <see cref="BigInteger"/> number.
 		/// </summary>
 		/// <param name="s">The string.</param>
 		/// <param name="base">The base.</param>
 		/// <returns>The parsed number.</returns>
-		/// <exception cref="System.FormatException">The number format for the BigInteger is invalid.</exception>
+		/// <exception cref="System.FormatException">The string does not represent a number.</exception>
 		public static BigInteger Parse(string s, int @base = 10)
 		{
 			if (!TryParse(s, @base, out BigInteger a))
@@ -722,7 +719,7 @@ namespace TsMath
 		/// <returns>The product.</returns>
 		public static BigInteger operator *(BigInteger a, BigInteger b)
 		{
-			bool fNeg = a.IsNegative != b.IsNegative;
+			bool fNeg = a.IsNegative() != b.IsNegative();
 			// check for fast
 			if (a.digits == null && b.digits == null)
 			{
@@ -946,8 +943,8 @@ namespace TsMath
 		{
 			if (divisor.digits == null && divisor.lenUsedOrDigit0 == 0)
 				throw new DivideByZeroException();
-			bool fQNeg = dividend.IsNegative != divisor.IsNegative;
-			bool fRNeg = dividend.IsNegative;
+			bool fQNeg = dividend.IsNegative() != divisor.IsNegative();
+			bool fRNeg = dividend.IsNegative();
 
 			var quotient = DivRemWorker(dividend.Abs(), divisor.Abs(), out remainder);
 			if (!remainder.IsZero())
@@ -981,7 +978,7 @@ namespace TsMath
 		/// </summary>
 		/// <param name="str">The string to convert.</param>
 		/// <exception cref="FormatException">The number format for the BigInteger is invalid.</exception>
-		public static implicit operator BigInteger(string str) => string.IsNullOrEmpty(str) ? Zero : Parse(str);
+		public static explicit operator BigInteger(string str) => string.IsNullOrEmpty(str) ? Zero : Parse(str);
 
 		/// <summary>
 		/// Conversion from <see cref="int"/> to <see cref="BigInteger"/>.
@@ -1009,7 +1006,7 @@ namespace TsMath
 		{
 			var a = this;
 			double d = 0, fak = 1;
-			bool sign = a.IsNegative;
+			bool sign = a.IsNegative();
 			a = a.Abs();
 			while (a != 0)
 			{
@@ -1030,7 +1027,7 @@ namespace TsMath
 		{
 			const int dc = sizeof(long) / sizeof(uint);
 			if (DigitCount > dc)
-				return IsNegative ? long.MinValue : long.MaxValue;
+				return IsNegative() ? long.MinValue : long.MaxValue;
 			ulong res = 0;
 			for (int i = dc - 1; i >= 0; i--)
 			{
@@ -1040,14 +1037,14 @@ namespace TsMath
 			ulong lmax = long.MaxValue;
 			if (res > long.MaxValue)
 			{
-				if (!IsNegative)
+				if (!IsNegative())
 					return long.MaxValue;
 				lmax++;
 				return res >= lmax ? long.MinValue : long.MinValue + 1;
 			}
 			long l = (long)res;
 
-			if (this.IsNegative)
+			if (this.IsNegative())
 				l = -l;
 			return l;
 		}
@@ -1077,7 +1074,7 @@ namespace TsMath
 			List<char> lc = new List<char>();
 			BigInteger a = this;
 			uint r = 0;
-			if (a.IsNegative)
+			if (a.IsNegative())
 				a.isNegative = false;
 			do
 			{
@@ -1095,8 +1092,8 @@ namespace TsMath
 
 			char[] ca = lc.ToArray();
 			string sret = new string(ca);
-			if (a != null)
-				sret += string.Format(" [{0}]", (int)(BigInteger.Log(this, 10) + 0.5));
+			if (a != 0)
+				sret += string.Format(" [{0}]", (int)(BigInteger.Log(this, @base) + 0.5));
 			return sret;
 
 			char Index2Char(uint i)
@@ -1124,10 +1121,10 @@ namespace TsMath
 		/// <returns>-1, 0 or 1; depending on if this instance is less than, equal or greater then <paramref name="other"/>.</returns>
 		public int CompareTo(BigInteger other)
 		{
-			if (this.IsNegative != other.IsNegative)
-				return IsNegative ? -1 : 1;
+			if (this.IsNegative() != other.IsNegative())
+				return IsNegative() ? -1 : 1;
 			int res = CompareUnsigned(this, other);
-			if (IsNegative)
+			if (IsNegative())
 				res = -res;
 			return res;
 		}
@@ -1177,7 +1174,7 @@ namespace TsMath
 		/// <returns>
 		/// <b>true</b> if this instance is zero; otherwise, <b>false</b>.
 		/// </returns>
-		public bool IsZero() => digits == null && lenUsedOrDigit0 == 0 && !IsNegative;
+		public bool IsZero() => digits == null && lenUsedOrDigit0 == 0 && !IsNegative();
 
 		/// <summary>
 		/// Gets a value indicating whether this instance is one.
@@ -1185,7 +1182,7 @@ namespace TsMath
 		/// <value>
 		/// <b>true</b> if this instance is one; otherwise, <b>false</b>.
 		/// </value>
-		public bool IsOne => digits == null && lenUsedOrDigit0 == 1 && !IsNegative;
+		public bool IsOne => digits == null && lenUsedOrDigit0 == 1 && !IsNegative();
 
 		/// <summary>
 		/// Implements the operator ==.
@@ -1280,7 +1277,7 @@ namespace TsMath
 		/// <exception cref="System.ArithmeticException">Negative exponents not allowed.</exception>
 		public static BigInteger Pow(BigInteger a, BigInteger b)
 		{
-			if (b.IsNegative)
+			if (b.IsNegative())
 				throw new ArithmeticException("Negative exponents not allowed.");
 			BigInteger res = 1;
 			BigInteger prod = a;
@@ -1328,7 +1325,7 @@ namespace TsMath
 			uint[] dig = new uint[nd];
 			for (int i = 0; i < nd; i++)
 				dig[i] = (uint)(a[i] & b[i]);
-			return new BigInteger(dig, a.IsNegative && b.IsNegative);
+			return new BigInteger(dig, a.IsNegative() && b.IsNegative());
 		}
 
 		/// <summary>
@@ -1343,7 +1340,7 @@ namespace TsMath
 			uint[] dig = new uint[nd];
 			for (int i = 0; i < nd; i++)
 				dig[i] = (uint)(a[i] | b[i]);
-			return new BigInteger(dig, a.IsNegative || b.IsNegative);
+			return new BigInteger(dig, a.IsNegative() || b.IsNegative());
 		}
 
 		/// <summary>
@@ -1358,7 +1355,7 @@ namespace TsMath
 			uint[] dig = new uint[nd];
 			for (int i = 0; i < nd; i++)
 				dig[i] = (uint)(a[i] ^ b[i]);
-			return new BigInteger(dig, a.IsNegative != b.IsNegative);
+			return new BigInteger(dig, a.IsNegative() != b.IsNegative());
 		}
 
 		/// <summary>
@@ -1393,7 +1390,7 @@ namespace TsMath
 				}
 				res[res.Length - 1] >>= nRest;
 			}
-			return new BigInteger(res, a.IsNegative);
+			return new BigInteger(res, a.IsNegative());
 		}
 
 		/// <summary>
@@ -1427,7 +1424,7 @@ namespace TsMath
 				}
 				res[0] <<= nRest;
 			}
-			return new BigInteger(res, a.IsNegative);
+			return new BigInteger(res, a.IsNegative());
 		}
 
 		/// <summary>
@@ -1460,7 +1457,7 @@ namespace TsMath
 		/// <returns>The logarithm of <paramref name="value"/>.</returns>
 		public static double Log(BigInteger value, double baseValue = Math.E)
 		{
-			if (value.IsNegative || baseValue == 1.0)
+			if (value.IsNegative() || baseValue == 1.0)
 				return double.NaN;
 			if (baseValue == double.PositiveInfinity)
 			{
@@ -1505,7 +1502,7 @@ namespace TsMath
 		/// </summary>
 		/// <param name="other">An object to compare with this object.</param>
 		/// <returns>
-		/// true if the current object is equal to the <paramref name="other">other</paramref> parameter; otherwise, false.
+		/// <b>true</b> if the current object is equal to the <paramref name="other">other</paramref> parameter; otherwise, <b>false</b>.
 		/// </returns>
 		public bool Equals(BigInteger other) => DoEquals(this, other);
 

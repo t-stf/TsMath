@@ -201,9 +201,9 @@ namespace TsMath
 				throw new ArithmeticException($"{nameof(modVal)} > 0 expected");
 			x %= modVal;
 			y %= modVal;
-			if (x.IsNegative)
+			if (x.IsNegative())
 				x += modVal;
-			if (y.IsNegative)
+			if (y.IsNegative())
 				y += modVal;
 			return (x * y) % modVal;
 		}

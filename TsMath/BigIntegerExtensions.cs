@@ -30,7 +30,7 @@ namespace TsMath
 		/// Gets the absolute value of this <see cref="BigInteger"/>.
 		/// </summary>
 		/// <returns></returns>
-		public static BigInteger Abs(this BigInteger value) => value.IsNegative ? -value : value;
+		public static BigInteger Abs(this BigInteger value) => value.IsNegative() ? -value : value;
 
 		/// <summary>
 		/// Returns the number of decimal digits of the provided number.
@@ -165,7 +165,7 @@ namespace TsMath
 				rem += 6 * (num[i] % 10);
 			}
 			rem %= 10;
-			if (num.IsNegative)
+			if (num.IsNegative())
 				rem = 10 - rem;
 			return (int)rem;
 		}
