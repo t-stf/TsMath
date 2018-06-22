@@ -657,7 +657,7 @@ namespace TsMath
 		}
 
 		/// <summary>
-		/// Subtracts two BigInts
+		/// Subtracts two numbers.
 		/// </summary>
 		/// <param name="a">The minuend.</param>
 		/// <param name="b">The subtrahend.</param>
@@ -694,11 +694,11 @@ namespace TsMath
 		}
 
 		/// <summary>
-		/// Implements the unary minus operator.
+		/// Implements the negation (unary minus) operator.
 		/// </summary>
-		/// <param name="a">a.</param>
+		/// <param name="a">The number to negate.</param>
 		/// <returns>
-		/// The result of the operator.
+		/// The negated value.
 		/// </returns>
 		public static BigInteger operator -(BigInteger a)
 		{
