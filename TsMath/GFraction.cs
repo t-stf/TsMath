@@ -6,14 +6,14 @@ namespace TsMath
 	/// <summary>
 	/// A fraction. Internally all fractions are irreducible.
 	/// </summary>
-	/// <typeparamref name="T">The base number type which uses <see cref="Arithmetic{T}.GetArithmetic"/> as underlaying arithmetic.</typeparamref>
+	/// <typeparamref name="T">Allowed types <see cref="long"/>, <see cref="BigInteger"/> and all user types with a registered arithmetic (<see cref="Arithmetic{T}.GetArithmetic"/>).</typeparamref>
 	public struct GFraction<T> : IEquatable<GFraction<T>>, IComparable<GFraction<T>> where T : IEquatable<T>
 	{
 
 		static readonly Arithmetic<T> arithmetic = Arithmetic<T>.GetArithmetic();
 
 		/// <summary>
-		/// The <see cref="GFraction{T}>"/> representing 0.
+		/// The <see cref="GFraction{T}"/> representing 0.
 		/// </summary>
 		public static readonly GFraction<T> Zero = new GFraction<T>(arithmetic.Zero(default), arithmetic.One(default), true);
 
@@ -111,7 +111,7 @@ namespace TsMath
 		public bool IsNegative() => arithmetic.IsNegative(num);
 
 		/// <summary>
-		/// Converts a <see cref="GFraction{T}"/> from a <see cref="T"/>.
+		/// Converts a <see cref="GFraction{T}"/> from a <typeparamref name="T"/>.
 		/// </summary>
 		/// <param name="num">The number to convert.</param>
 		public static implicit operator GFraction<T>(T num) => new GFraction<T>(num);
@@ -377,15 +377,6 @@ namespace TsMath
 		/// </returns>
 		public static bool operator >(GFraction<T> a, GFraction<T> b) => Compare(a, b) > 0;
 
-	}
-
-
-	public static class FractionExtensions2
-	{
-
-		public static GFraction<long> ToLongFraction(this string s) => GFraction<long>.Parse(s);
-
-		public static GFraction<BigInteger> ToBigIntegerFraction(this string s) => GFraction<BigInteger>.Parse(s);
 	}
 
 }
