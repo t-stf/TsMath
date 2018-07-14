@@ -2,33 +2,33 @@
 
 namespace TsMath.Structures
 {
-	class GFractionArithmetic<N> : Arithmetic<GFraction<N>> where N : IEquatable<N>
+	class GFractionArithmetic<N> : Arithmetic<Fraction<N>> where N : IEquatable<N>
 	{
 		Arithmetic<N> elArith = Arithmetic<N>.GetArithmetic();
 
-		public override GFraction<N> Zero(GFraction<N> hint) => new GFraction<N>(elArith.Zero(hint.Numerator), elArith.One(hint.Numerator), true);
+		public override Fraction<N> Zero(Fraction<N> hint) => new Fraction<N>(elArith.Zero(hint.Numerator), elArith.One(hint.Numerator), true);
 
-		public override GFraction<N> One(GFraction<N> hint) => new GFraction<N>(elArith.One(hint.Numerator), elArith.One(hint.Numerator), true);
+		public override Fraction<N> One(Fraction<N> hint) => new Fraction<N>(elArith.One(hint.Numerator), elArith.One(hint.Numerator), true);
 
-		public override GFraction<N> MinusOne(GFraction<N> hint) => new GFraction<N>(elArith.MinusOne(hint.Numerator), elArith.One(hint.Numerator), true);
+		public override Fraction<N> MinusOne(Fraction<N> hint) => new Fraction<N>(elArith.MinusOne(hint.Numerator), elArith.One(hint.Numerator), true);
 
-		public override GFraction<N> Add(GFraction<N> a, GFraction<N> b) => a + b;
+		public override Fraction<N> Add(Fraction<N> a, Fraction<N> b) => a + b;
 
-		public override GFraction<N> Subtract(GFraction<N> a, GFraction<N> b) => a - b;
+		public override Fraction<N> Subtract(Fraction<N> a, Fraction<N> b) => a - b;
 
-		public override GFraction<N> Multiply(GFraction<N> a, GFraction<N> b) => a * b;
+		public override Fraction<N> Multiply(Fraction<N> a, Fraction<N> b) => a * b;
 
-		public override GFraction<N> Divide(GFraction<N> a, GFraction<N> b) => a / b;
+		public override Fraction<N> Divide(Fraction<N> a, Fraction<N> b) => a / b;
 
-		public override bool IsNegative(GFraction<N> a) => a.IsNegative();
+		public override bool IsNegative(Fraction<N> a) => a.IsNegative();
 
-		public override bool IsZero(GFraction<N> value) => value.IsZero();
+		public override bool IsZero(Fraction<N> value) => value.IsZero();
 
-		public override GFraction<N> Negate(GFraction<N> a) => -a;
+		public override Fraction<N> Negate(Fraction<N> a) => -a;
 
-		public override bool TryParse(string s, out GFraction<N> value) => GFraction<N>.TryParse(s, out value);
+		public override bool TryParse(string s, out Fraction<N> value) => Fraction<N>.TryParse(s, out value);
 
-		public override string ToString(GFraction<N> value, int maxLen) => value.ToString(maxLen);
+		public override string ToString(Fraction<N> value, int maxLen) => value.ToString(maxLen);
 
 	}
 }
