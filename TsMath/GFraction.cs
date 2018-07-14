@@ -6,8 +6,8 @@ namespace TsMath
 	/// <summary>
 	/// A fraction. Internally all fractions are irreducible.
 	/// </summary>
-	/// <typeparamref name="T">Allowed types <see cref="long"/>, <see cref="BigInteger"/> and all user types with a registered arithmetic (<see cref="Arithmetic{T}.GetArithmetic"/>).</typeparamref>
-	public struct GFraction<T> : IEquatable<GFraction<T>>, IComparable<GFraction<T>> where T : IEquatable<T>
+	/// <typeparamref name="T">Allowed types are <see cref="long"/>, <see cref="BigInteger"/> and all user types with a registered arithmetic (<see cref="Arithmetic{T}.GetArithmetic"/>).</typeparamref>
+	public struct GFraction<T> : IEquatable<GFraction<T>>, IComparable<GFraction<T>> 
 	{
 
 		static readonly Arithmetic<T> arithmetic = Arithmetic<T>.GetArithmetic();
@@ -23,7 +23,7 @@ namespace TsMath
 		public static readonly GFraction<T> One = new GFraction<T>(arithmetic.One(default), arithmetic.One(default), true);
 
 		/// <summary>
-		/// The <see cref="Fraction"/> representing -1.
+		/// The <see cref="GFraction{T}"/> representing -1.
 		/// </summary>
 		public static readonly GFraction<T> MinusOne = new GFraction<T>(arithmetic.MinusOne(default), arithmetic.One(default), true);
 
@@ -59,7 +59,7 @@ namespace TsMath
 		}
 
 		/// <summary>
-		/// Constructs a <see cref="Fraction"/> from an integer.
+		/// Constructs a <see cref="GFraction{T}"/> from an integer.
 		/// </summary>
 		/// <param name="numerator">The numerator.</param>
 		public GFraction(T numerator) : this(numerator, arithmetic.One(numerator), true)
@@ -229,7 +229,7 @@ namespace TsMath
 		/// <returns>
 		/// The negated value.
 		/// </returns>
-		public static GFraction<T> operator -(GFraction<T> a)
+		public static GFraction<T> operator -(in GFraction<T> a)
 		{
 			return new GFraction<T>(arithmetic.Negate(a.num), a.den, true);
 		}
@@ -251,17 +251,17 @@ namespace TsMath
 		/// </returns>	
 		public string ToString(int maxLen)
 		{
-			var numString= arithmetic.ToString(num, maxLen);
+			var numString = arithmetic.ToString(num, maxLen);
 			if (arithmetic.Equals(den, arithmetic.One(den)))
 				return numString;
 			return numString + "/" + arithmetic.ToString(den, Math.Max(10, maxLen - numString.Length));
 		}
 
-		private static bool Equals(GFraction<T> a, GFraction<T> b)
+		private static bool Equals(in GFraction<T> a, in GFraction<T> b)
 		{
-			if (!a.num.Equals(b.num))
+			if (!arithmetic.Equals(a.num, b.num))
 				return false;
-			if (!a.den.Equals(b.den))
+			if (!arithmetic.Equals(a.den, b.den))
 				return false;
 			return true;
 		}
@@ -297,12 +297,12 @@ namespace TsMath
 		/// </returns>
 		public override int GetHashCode()
 		{
-			int hc = num.GetHashCode();
+			int hc = arithmetic.GetHashCode(num);
 			hc <<= 7;
-			return hc + den.GetHashCode();
+			return hc + arithmetic.GetHashCode(den);
 		}
 
-		private static int Compare(GFraction<T> a, GFraction<T> b)
+		private static int Compare(in GFraction<T> a, in GFraction<T> b)
 		{
 			var d = a - b;
 			if (d.IsZero())
@@ -325,7 +325,7 @@ namespace TsMath
 		/// <returns>
 		/// <b>true</b> if both numbers are equal; <b>false</b> otherwise.
 		/// </returns>
-		public static bool operator ==(GFraction<T> a, GFraction<T> b) => Equals(a, b);
+		public static bool operator ==(in GFraction<T> a, in GFraction<T> b) => Equals(a, b);
 
 		/// <summary>
 		/// Implements the operator !=.
@@ -335,7 +335,7 @@ namespace TsMath
 		/// <returns>
 		/// <b>true</b> if both numbers are not equal; <b>false</b> otherwise.
 		/// </returns>
-		public static bool operator !=(GFraction<T> a, GFraction<T> b) => !Equals(a, b);
+		public static bool operator !=(in GFraction<T> a, in GFraction<T> b) => !Equals(a, b);
 
 		/// <summary>
 		/// Implements the operator &lt;=.
@@ -345,7 +345,7 @@ namespace TsMath
 		/// <returns>
 		/// <b>true</b> if both <paramref name="a"/> is less than or equal to <paramref name="b"/>; <b>false</b> otherwise.
 		/// </returns>
-		public static bool operator <=(GFraction<T> a, GFraction<T> b) => Compare(a, b) <= 0;
+		public static bool operator <=(in GFraction<T> a, in GFraction<T> b) => Compare(a, b) <= 0;
 
 		/// <summary>
 		/// Implements the operator &gt;=.
@@ -355,7 +355,7 @@ namespace TsMath
 		/// <returns>
 		/// <b>true</b> if both <paramref name="a"/> is greater than or equal to <paramref name="b"/>; <b>false</b> otherwise.
 		/// </returns>
-		public static bool operator >=(GFraction<T> a, GFraction<T> b) => Compare(a, b) >= 0;
+		public static bool operator >=(in GFraction<T> a, in GFraction<T> b) => Compare(a, b) >= 0;
 
 		/// <summary>
 		/// Implements the operator &lt;.
@@ -365,7 +365,7 @@ namespace TsMath
 		/// <returns>
 		/// <b>true</b> if both <paramref name="a"/> is less than <paramref name="b"/>; <b>false</b> otherwise.
 		/// </returns>
-		public static bool operator <(GFraction<T> a, GFraction<T> b) => Compare(a, b) < 0;
+		public static bool operator <(in GFraction<T> a, in GFraction<T> b) => Compare(a, b) < 0;
 
 		/// <summary>
 		/// Implements the operator &gt;.
@@ -375,7 +375,7 @@ namespace TsMath
 		/// <returns>
 		/// <b>true</b> if both <paramref name="a"/> is greater than <paramref name="b"/>; <b>false</b> otherwise.
 		/// </returns>
-		public static bool operator >(GFraction<T> a, GFraction<T> b) => Compare(a, b) > 0;
+		public static bool operator >(in GFraction<T> a, in GFraction<T> b) => Compare(a, b) > 0;
 
 	}
 
