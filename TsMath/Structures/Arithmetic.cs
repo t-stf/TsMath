@@ -101,8 +101,8 @@ namespace TsMath.Structures
 				{ typeof(BigInteger), new BigIntegerArithmetic() },
 			};
   //		arithmetics.Add(typeof(Matrix<double>), new MatrixArithmetic<double>());
-			arithmetics.Add(typeof(Fraction<long>), new GFractionArithmetic<long>());
-			arithmetics.Add(typeof(Fraction<BigInteger>), new GFractionArithmetic<BigInteger>());
+			arithmetics.Add(typeof(Fraction<long>), new FractionArithmetic<long>());
+			arithmetics.Add(typeof(Fraction<BigInteger>), new FractionArithmetic<BigInteger>());
 		}
 
 	}
