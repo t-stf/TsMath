@@ -237,13 +237,13 @@ namespace TsMath
 		/// <summary>
 		/// Returns a <see cref="string" /> that represents this instance.
 		/// </summary>
-		/// <remarks>The numerator and denominator output shows only a fixed number of decimal digits as provided in <see cref="TsMathGlobals.MaxBigIntegerToStringDigitCount"/>.</remarks>
+		/// <remarks>The numerator and denominator output shows only a fixed number of decimal digits as provided in <see cref="TsMathGlobals.DefaultToStringLength"/>.</remarks>
 		/// <returns>
 		/// A <see cref="string" /> that represents this instance.
 		/// </returns>
 		public override string ToString()
 		{
-			return ToString(TsMathGlobals.MaxBigIntegerToStringDigitCount);
+			return ToString(TsMathGlobals.DefaultToStringLength);
 		}
 
 		/// <summary>

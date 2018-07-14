@@ -1108,11 +1108,11 @@ namespace TsMath
 		/// <summary>
 		/// Returns a <see cref="string" /> that represents this instance.
 		/// </summary>
-		/// <remarks>The output shows only a fixed number of decimal digits as provided in <see cref="TsMathGlobals.MaxBigIntegerToStringDigitCount"/>.</remarks>
+		/// <remarks>The output shows only a fixed number of decimal digits as provided in <see cref="TsMathGlobals.DefaultToStringLength"/>.</remarks>
 		/// <returns>
 		/// A <see cref="string" /> that represents this instance.
 		/// </returns>
-		public override string ToString() => ToString(TsMathGlobals.MaxBigIntegerToStringDigitCount, 10);
+		public override string ToString() => ToString(TsMathGlobals.DefaultToStringLength, 10);
 
 		/// <summary>
 		/// Compares this instance to an other one.

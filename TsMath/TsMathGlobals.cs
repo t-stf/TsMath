@@ -15,9 +15,9 @@
 		public static int MaxCachedExponentForGetPowerOfTen = 100;
 
 		/// <summary>
-		/// The maximum big integer digit count used in <see cref="BigInteger.ToString()"/>.
+		/// The maximum length for ToString operations, to avoid very large strings.
 		/// </summary>
-		public static int MaxBigIntegerToStringDigitCount = 80;
+		public static int DefaultToStringLength = 80;
 
 		/// <summary>
 		/// The maximum number of parallel operations. Set this value to zero, if you want a single threaded execution.
