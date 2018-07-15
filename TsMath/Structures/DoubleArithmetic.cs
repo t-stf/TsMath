@@ -37,5 +37,7 @@ namespace TsMath.Structures
 
 		public override string ToString(double value, int maxLen) => value.ToString(CultureInfo.InvariantCulture);
 
+		public override int CompareMagnitude(double a, double b) => Math.Abs(a).CompareTo(Math.Abs(b));
+
 	}
 }

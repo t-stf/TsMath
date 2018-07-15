@@ -28,5 +28,7 @@
 
 		public override string ToString(BigInteger value, int maxLen) => value.ToString(maxLen);
 
+		public override int CompareMagnitude(BigInteger a, BigInteger b) => a.Abs().CompareTo(b.Abs());
+
 	}
 }

@@ -53,7 +53,12 @@ namespace TsMath.Structures
 		/// <remarks>This method is used in algorithms which required some kind of a pivot.
 		/// </remarks>
 		/// <returns>-1,0 or 1 depending on the magnitudes of the arguments.</returns>
-		public virtual int CompareMagnitude(T a, T b) => 0;
+		public virtual int CompareMagnitude(T a, T b)
+		{
+			var aZero = !IsZero(a);
+			var bZero = !IsZero(b);
+			return aZero.CompareTo(bZero);
+		}
 
 		public virtual bool TryParse(string s, out T value)
 		{
