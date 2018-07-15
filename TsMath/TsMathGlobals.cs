@@ -35,6 +35,10 @@
 		/// </summary>
 		public static int BigIntegerRecursiveDivRemThreshold = 10;
 
+		/// <summary>
+		/// Number of matrix elements, when the algorithms switch to a multi threaded version.
+		/// </summary>
+		public static int MatrixMultithreadingThreshold = 1_000;
 
 	}
 

@@ -47,5 +47,7 @@ namespace TsMath.Structures
 
 		public override bool TryParse(string s, out long value) => long.TryParse(s, out value);
 
+		public override int CompareMagnitude(long a, long b) => Math.Abs(a).CompareTo(Math.Abs(b));
+
 	}
 }

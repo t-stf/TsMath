@@ -2,7 +2,7 @@
 
 namespace TsMath.Structures
 {
-	class FractionArithmetic<T> : Arithmetic<Fraction<T>> where T : IEquatable<T>
+	class FractionArithmetic<T> : Arithmetic<Fraction<T>> 
 	{
 		Arithmetic<T> elArith = Arithmetic<T>.GetArithmetic();
 
@@ -29,6 +29,10 @@ namespace TsMath.Structures
 		public override bool TryParse(string s, out Fraction<T> value) => Fraction<T>.TryParse(s, out value);
 
 		public override string ToString(Fraction<T> value, int maxLen) => value.ToString(maxLen);
+
+		public override int Sign(Fraction<T> a) => elArith.Sign(a.Numerator);
+
+		public override int CompareMagnitude(Fraction<T> a, Fraction<T> b) => a.Abs().CompareTo(b.Abs());
 
 	}
 }

@@ -45,6 +45,16 @@ namespace TsMath.Structures
 
 		public virtual T Abs(T a) => Sign(a) < 0 ? Negate(a) : a;
 
+		/// <summary>
+		/// Compares the magnitudes of two values. 
+		/// </summary>
+		/// <param name="a">First object.</param>
+		/// <param name="b">Second object.</param>
+		/// <remarks>This method is used in algorithms which required some kind of a pivot.
+		/// </remarks>
+		/// <returns>-1,0 or 1 depending on the magnitudes of the arguments.</returns>
+		public virtual int CompareMagnitude(T a, T b) => 0;
+
 		public virtual bool TryParse(string s, out T value)
 		{
 			value = default;

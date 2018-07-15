@@ -377,6 +377,18 @@ namespace TsMath
 		/// </returns>
 		public static bool operator >(in Fraction<T> a, in Fraction<T> b) => Compare(a, b) > 0;
 
+		/// <summary>
+		/// Returns the absolute value of a fraction
+		/// </summary>
+		/// <returns>The absolute value.</returns>
+		public Fraction<T> Abs()
+		{
+			if (arithmetic.IsNegative(num))
+				return -this;
+			return this;
+		}
+
 	}
+
 
 }
