@@ -89,6 +89,8 @@ namespace TsMath.Structures
 
 		public virtual bool IsZero(T value) => Equals(value, Zero(value));
 
+		public virtual bool IsOne(T value) => Equals(value, One(value));
+
 		public virtual bool Equals(T x, T y) => x.Equals(y);
 
 		public virtual int GetHashCode(T obj) => obj.GetHashCode();
