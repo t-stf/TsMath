@@ -11,7 +11,6 @@ namespace TsMath.Structures
 	/// <typeparam name="T">The type the behavior is applied to.</typeparam>
 	public abstract class Arithmetic<T> : IEqualityComparer<T>
 	{
-		static Dictionary<Type, object> arithmetics;
 
 		public virtual string DomainName => typeof(T).Name;
 
@@ -95,32 +94,31 @@ namespace TsMath.Structures
 
 		public virtual int GetHashCode(T obj) => obj.GetHashCode();
 
-		public static Arithmetic<T> GetArithmetic()
+	}
+
+	public static class ArithmeticFactory
+	{
+
+		static Dictionary<Type, object> arithmetics = new Dictionary<Type, object>();
+
+
+		static ArithmeticFactory()
 		{
-			if (arithmetics == null)
-				InitDefaultArithmetics();
+			SetArithmetic(typeof(double), new DoubleArithmetic());
+			SetArithmetic(typeof(long), new LongArithmetic());
+			SetArithmetic(typeof(BigInteger), new BigIntegerArithmetic());
+		}
+
+		public static Arithmetic<T> GetArithmetic<T>()
+		{
 			if (!arithmetics.TryGetValue(typeof(T), out object val))
 				throw new ArithmeticException($"No arithmetic for type {typeof(T).Name}");
 			return (Arithmetic<T>)val;
 		}
 
-		public static void SetArithmetic(Type type, Arithmetic<T> arithmetic)
+		public static void SetArithmetic<T>(Type type, Arithmetic<T> arithmetic)
 		{
 			arithmetics[type] = arithmetic;
 		}
-
-		private static void InitDefaultArithmetics()
-		{
-			arithmetics = new Dictionary<Type, object>
-			{
-				{ typeof(double), new DoubleArithmetic() },
-				{ typeof(long), new LongArithmetic() },
-				{ typeof(BigInteger), new BigIntegerArithmetic() },
-			};
-  //		arithmetics.Add(typeof(Matrix<double>), new MatrixArithmetic<double>());
-			arithmetics.Add(typeof(Fraction<long>), new FractionArithmetic<long>());
-			arithmetics.Add(typeof(Fraction<BigInteger>), new FractionArithmetic<BigInteger>());
-		}
-
 	}
 }

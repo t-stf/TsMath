@@ -2,7 +2,7 @@
 {
 	struct K<T>
 	{
-		static Arithmetic<T> arith = Arithmetic<T>.GetArithmetic();
+		static Arithmetic<T> arith = ArithmeticFactory.GetArithmetic<T>();
 
 		T value;
 

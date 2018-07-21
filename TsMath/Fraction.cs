@@ -6,11 +6,17 @@ namespace TsMath
 	/// <summary>
 	/// A fraction. Internally all fractions are irreducible.
 	/// </summary>
-	/// <typeparamref name="T">Allowed types are <see cref="long"/>, <see cref="BigInteger"/> and all user types with a registered arithmetic (<see cref="Arithmetic{T}.GetArithmetic"/>).</typeparamref>
-	public struct Fraction<T> : IEquatable<Fraction<T>>, IComparable<Fraction<T>> 
+	/// <typeparamref name="T">Allowed types are <see cref="long"/>, <see cref="BigInteger"/> and all user types with 
+	/// a registered arithmetic (<see cref="ArithmeticFactory.SetArithmetic{T}(Type, Arithmetic{T})"/>).</typeparamref>
+	public struct Fraction<T> : IEquatable<Fraction<T>>, IComparable<Fraction<T>>
 	{
 
-		static readonly Arithmetic<T> arithmetic = Arithmetic<T>.GetArithmetic();
+		static readonly Arithmetic<T> arithmetic = ArithmeticFactory.GetArithmetic<T>();
+
+		static Fraction()
+		{
+			ArithmeticFactory.SetArithmetic(typeof(Fraction<T>), new FractionArithmetic<T>());
+		}
 
 		/// <summary>
 		/// The <see cref="Fraction{T}"/> representing 0.

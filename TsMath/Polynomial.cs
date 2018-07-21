@@ -11,7 +11,7 @@ namespace TsMath
 	/// supports division.</typeparam>
 	public class Polynomial<T> : IEquatable<Polynomial<T>>
 	{
-		static readonly Arithmetic<T> arithmetic = Arithmetic<T>.GetArithmetic();
+		static readonly Arithmetic<T> arithmetic = ArithmeticFactory.GetArithmetic<T>();
 
 		T[] coeffs;
 

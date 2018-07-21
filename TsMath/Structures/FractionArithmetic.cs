@@ -4,7 +4,7 @@ namespace TsMath.Structures
 {
 	class FractionArithmetic<T> : Arithmetic<Fraction<T>> 
 	{
-		Arithmetic<T> elArith = Arithmetic<T>.GetArithmetic();
+		Arithmetic<T> elArith = ArithmeticFactory.GetArithmetic<T>();
 
 		public override Fraction<T> Zero(Fraction<T> hint) => new Fraction<T>(elArith.Zero(hint.Numerator), elArith.One(hint.Numerator), true);
 
