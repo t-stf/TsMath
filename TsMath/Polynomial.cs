@@ -346,5 +346,23 @@ namespace TsMath
 			}
 		}
 
+		/// <summary>
+		/// Derives this polynomial.
+		/// </summary>
+		/// <returns>The derived polynomial.</returns>
+		public Polynomial<T> Derive()
+		{
+			if (Degree <= 0)
+				return new Polynomial<T>(zero, 0);
+			var coeffs = new T[Degree];
+			var one = arithmetic.One(zero);
+			var factor = one;
+			for (int i = 0; i < Degree; i++)
+			{
+				coeffs[i] = arithmetic.Multiply(factor, this[i + 1]);
+				factor = arithmetic.Add(factor, one);
+			}
+			return new Polynomial<T>(coeffs);
+		}
 	}
 }
