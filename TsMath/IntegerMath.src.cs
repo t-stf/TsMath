@@ -13,7 +13,7 @@ namespace TsMath
 		/// <param name="a">Number.</param>
 		/// <param name="exp">The exponent.</param>
 		/// <returns><paramref name="a"/>^<paramref name="exp"/></returns>
-		/// <exception cref="System.ArgumentOutOfRangeException">exp>=0 expected</exception>
+		/// <exception cref="System.ArgumentOutOfRangeException">The exponent is negative.</exception>
 		public static BigInteger Pow(BigInteger a, BigInteger exp)
 		{
 			if (exp < 0)

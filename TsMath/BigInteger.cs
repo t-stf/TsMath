@@ -956,6 +956,7 @@ namespace TsMath
 		/// <summary>
 		/// Divides two <see cref="BigInteger"/> values.
 		/// </summary>
+		/// <remarks>The division ignores a possible remainder and mimics the / operator of <see cref="int"/> values.</remarks>
 		/// <param name="dividend">The value to be divided.</param>
 		/// <param name="divisor">The value to divide by.</param>
 		/// <returns>The result of the division.</returns>

@@ -28,6 +28,27 @@ namespace TsMath.Structures
 
 		public virtual T Multiply(T a, T b) => ThrowNoDefException();
 
+		public virtual T Pow(T a, long exp)
+		{
+			if (exp < 0)
+				throw new ArgumentOutOfRangeException("exp>=0 expected");
+
+			T prod = One(a);
+			if (exp == 0)
+				return prod;
+			if (IsZero(a) || IsOne(a) || exp == 1)
+				return a;
+			T factor = a;
+			while (exp != 0)
+			{
+				if ((exp & 1) == 0)
+					prod = Multiply(prod, factor);
+				factor = Multiply(factor, factor);
+				exp >>= 1;
+			}
+			return prod;
+		}
+
 		public virtual T Divide(T a, T b) => ThrowNoDefException();
 
 		public virtual T DivideWithRemainder(T a, T b, out T remainder)
@@ -94,31 +115,5 @@ namespace TsMath.Structures
 
 		public virtual int GetHashCode(T obj) => obj.GetHashCode();
 
-	}
-
-	public static class ArithmeticFactory
-	{
-
-		static Dictionary<Type, object> arithmetics = new Dictionary<Type, object>();
-
-
-		static ArithmeticFactory()
-		{
-			SetArithmetic(typeof(double), new DoubleArithmetic());
-			SetArithmetic(typeof(long), new LongArithmetic());
-			SetArithmetic(typeof(BigInteger), new BigIntegerArithmetic());
-		}
-
-		public static Arithmetic<T> GetArithmetic<T>()
-		{
-			if (!arithmetics.TryGetValue(typeof(T), out object val))
-				throw new ArithmeticException($"No arithmetic for type {typeof(T).Name}");
-			return (Arithmetic<T>)val;
-		}
-
-		public static void SetArithmetic<T>(Type type, Arithmetic<T> arithmetic)
-		{
-			arithmetics[type] = arithmetic;
-		}
 	}
 }

@@ -13,6 +13,19 @@ namespace TsMath
 	{
 		static readonly Arithmetic<T> arithmetic = ArithmeticFactory.GetArithmetic<T>();
 
+		/// <summary>
+		/// Returns the <see cref="Arithmetic{T}"/> of the underlaying ring/ field elements.
+		/// </summary>
+		public static Arithmetic<T> ElementArithmetic => arithmetic;
+
+		static PolynomialArithmetic<T> polyArithmetic;
+
+		static Polynomial()
+		{
+			polyArithmetic = new PolynomialArithmetic<T>();
+			ArithmeticFactory.SetArithmetic(typeof(Polynomial<T>), polyArithmetic);
+		}
+
 		T[] coeffs;
 
 		T zero;
@@ -27,7 +40,13 @@ namespace TsMath
 		/// Checks if this polynomial is zero, meaning that all coefficients are zero.
 		/// </summary>
 		/// <returns><b>true</b> if this polynomial is zero; <b>false</b> otherwise.</returns>
-		public bool IsZero() => Degree == 0 & arithmetic.IsZero(this[0]);
+		public bool IsZero() => Degree == 0 && arithmetic.IsZero(this.LeadingCoefficient);
+
+		/// <summary>
+		/// Checks if this polynomial is one, meaning that it has degree 0 and the constant coefficient is one.
+		/// </summary>
+		/// <returns><b>true</b> if this polynomial is one; <b>false</b> otherwise.</returns>
+		public bool IsOne() => Degree == 0 && arithmetic.IsOne(this.LeadingCoefficient);
 
 		/// <summary>
 		/// Constructs a polynomial.
@@ -43,6 +62,11 @@ namespace TsMath
 		public Polynomial(params T[] coefficients)
 		{
 			Init(coefficients);
+		}
+
+		public Polynomial(bool reverse, params T[] coefficients)
+		{
+
 		}
 
 		private Polynomial(T value, int exponent)
@@ -80,6 +104,29 @@ namespace TsMath
 		/// <param name="index">The power index.</param>
 		/// <returns>The coefficient at position x^<paramref name="index"/>.</returns>
 		public T this[int index] => index >= coeffs.Length ? zero : coeffs[index];
+
+		/// <summary>
+		/// Get the leading coefficient.
+		/// </summary>
+		public T LeadingCoefficient => this[Degree];
+
+		/// <summary>
+		/// Calculates the value of the polynomial at <paramref name="x"/>.
+		/// </summary>
+		/// <param name="x">The position to compute the value for.</param>
+		/// <returns>The value at <paramref name="x"/>.</returns>
+		public T Value(T x)
+		{
+			int n = Degree;
+			if (n == 0)
+				return LeadingCoefficient;
+			var p = coeffs[n];
+			while (n > 0)
+			{
+				p = arithmetic.Add(arithmetic.Multiply(p, x), coeffs[--n]);
+			}
+			return p;
+		}
 
 		/// <summary>
 		/// Adds two polynomials.
@@ -156,6 +203,18 @@ namespace TsMath
 				}
 			}
 			return new Polynomial<T>(result);
+		}
+
+		/// <summary>
+		/// Divides two polynomials.
+		/// </summary>
+		/// <remarks>The division ignores a possible remainder.</remarks>
+		/// <param name="dividend">The value to be divided.</param>
+		/// <param name="divisor">The value to divide by.</param>
+		/// <returns>The result of the division.</returns>
+		public static Polynomial<T> operator /(Polynomial<T> dividend, Polynomial<T> divisor)
+		{
+			return DivRem(dividend, divisor, out Polynomial<T> r);
 		}
 
 		/// <summary>
@@ -364,5 +423,16 @@ namespace TsMath
 			}
 			return new Polynomial<T>(coeffs);
 		}
+
+		/// <summary>
+		/// Calculates the power of <paramref name="a"/> raised to <paramref name="exp"/>, which must be a non negative 
+		/// natural number
+		/// </summary>
+		/// <param name="a">Polynomial.</param>
+		/// <param name="exp">The exponent.</param>
+		/// <returns><paramref name="a"/>^<paramref name="exp"/></returns>
+		/// <exception cref="System.ArgumentOutOfRangeException">The exponent is negative.</exception>
+		public static Polynomial<T> Pow(Polynomial<T> a, long exp) => polyArithmetic.Pow(a, exp);
+
 	}
 }
